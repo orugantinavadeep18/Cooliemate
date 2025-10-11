@@ -13,15 +13,57 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/coolimate', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch((err) => console.error('❌ MongoDB Connection Error:', err));
+// ==================== MONGODB CONNECTION WITH RETRY LOGIC ====================
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/coolimate', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // 30 seconds timeout
+      socketTimeoutMS: 45000, // 45 seconds socket timeout
+    });
 
-// Booking Schema
+    console.log('✅ MongoDB Connected Successfully');
+    console.log(`📍 Database Host: ${conn.connection.host}`);
+    console.log(`📦 Database Name: ${conn.connection.name}`);
+  } catch (error) {
+    console.error('❌ MongoDB Connection Error:', error.message);
+    console.log('🔄 Retrying connection in 5 seconds...');
+    setTimeout(connectDB, 5000); // Retry after 5 seconds
+  }
+};
+
+// Initial connection
+connectDB();
+
+// Handle connection events
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB connection error:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(connectDB, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected successfully');
+});
+
+// Middleware to check DB connection before processing requests
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('⚠️ Database not ready, readyState:', mongoose.connection.readyState);
+    return res.status(503).json({ 
+      error: 'Database temporarily unavailable',
+      message: 'Please try again in a moment',
+      readyState: mongoose.connection.readyState
+    });
+  }
+  next();
+});
+
+// ==================== BOOKING SCHEMA ====================
 const bookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   porterId: { type: String, required: true, index: true },
@@ -65,9 +107,18 @@ const Booking = mongoose.model('Booking', bookingSchema);
 
 // Health Check
 app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const statusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
   res.json({ 
-    status: 'OK', 
+    status: dbStatus === 1 ? 'OK' : 'Degraded', 
     message: 'CooliMate Backend is running!',
+    database: statusMap[dbStatus],
     timestamp: new Date().toISOString()
   });
 });
@@ -133,7 +184,8 @@ app.get('/api/bookings/porter/:porterId', async (req, res) => {
     }
 
     const bookings = await Booking.find(query)
-      .sort({ requestedAt: -1 }); // Most recent first
+      .sort({ requestedAt: -1 }) // Most recent first
+      .maxTimeMS(20000); // 20 second timeout for this query
 
     console.log(`📦 Fetched ${bookings.length} bookings for porter ${porterId}`);
 
@@ -156,7 +208,8 @@ app.get('/api/bookings/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
     
-    const booking = await Booking.findOne({ id: bookingId });
+    const booking = await Booking.findOne({ id: bookingId })
+      .maxTimeMS(10000); // 10 second timeout
 
     if (!booking) {
       return res.status(404).json({ 
@@ -190,7 +243,7 @@ app.patch('/api/bookings/:bookingId/accept', async (req, res) => {
         acceptedAt: new Date()
       },
       { new: true }
-    );
+    ).maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
@@ -226,7 +279,7 @@ app.patch('/api/bookings/:bookingId/complete', async (req, res) => {
         completedAt: new Date()
       },
       { new: true }
-    );
+    ).maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
@@ -262,7 +315,7 @@ app.patch('/api/bookings/:bookingId/decline', async (req, res) => {
         declinedAt: new Date()
       },
       { new: true }
-    );
+    ).maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
@@ -304,7 +357,7 @@ app.get('/api/porter/:porterId/stats', async (req, res) => {
           }
         }
       }
-    ]);
+    ]).maxTimeMS(15000);
 
     const formattedStats = {
       pending: 0,
@@ -339,7 +392,8 @@ app.delete('/api/bookings/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
 
-    const booking = await Booking.findOneAndDelete({ id: bookingId });
+    const booking = await Booking.findOneAndDelete({ id: bookingId })
+      .maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
@@ -385,4 +439,5 @@ app.listen(PORT, () => {
   console.log(`🚀 CooliMate Backend running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`⏳ MongoDB connection status: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Connecting...'}`);
 });
