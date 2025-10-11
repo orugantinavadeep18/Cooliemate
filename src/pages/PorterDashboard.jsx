@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const API_BASE = 'http://localhost:5000';
+
 const PorterDashboard = () => {
   const { toast } = useToast();
   const [bookings, setBookings] = useState([]);
@@ -32,10 +34,9 @@ const PorterDashboard = () => {
     station: "Kurnool",
   };
 
-  // Load bookings from localStorage
+  // Load bookings from backend API
   useEffect(() => {
     loadBookings();
-    setLoading(false);
 
     // Set up interval to check for new bookings every 2 seconds
     const interval = setInterval(() => {
@@ -45,74 +46,75 @@ const PorterDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadBookings = () => {
+  const loadBookings = async () => {
     try {
-      const storedBookings = localStorage.getItem('porterBookings');
-      console.log('🔍 Porter Dashboard - Loading bookings from localStorage:', storedBookings);
+      console.log('🔍 Porter Dashboard - Fetching bookings from backend...');
       
-      if (storedBookings) {
-        const allBookings = JSON.parse(storedBookings);
-        console.log('📦 All bookings in localStorage:', allBookings);
-        
-        // Filter bookings for this porter
-        const porterBookings = allBookings.filter(
-          b => b.porterId === porterInfo.id && b.status !== "declined"
-        );
-        
-        console.log('✅ Filtered bookings for porter', porterInfo.id, ':', porterBookings);
-        setBookings(porterBookings);
-      } else {
-        console.log('⚠️ No bookings found in localStorage');
-        setBookings([]);
+      const response = await fetch(`${API_BASE}/api/bookings/porter/${porterInfo.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
       }
+
+      const data = await response.json();
+      console.log('📦 Bookings received from backend:', data.bookings);
+      
+      // Filter out declined bookings
+      const activeBookings = data.bookings.filter(b => b.status !== "declined");
+      
+      setBookings(activeBookings);
+      setLoading(false);
     } catch (error) {
       console.error("❌ Error loading bookings:", error);
-      toast({
-        title: "Error Loading Bookings",
-        description: "Failed to load bookings. Please refresh the page.",
-        variant: "destructive",
-      });
+      setLoading(false);
+      
+      // Only show error toast on initial load or manual refresh
+      if (loading || isRefreshing) {
+        toast({
+          title: "Error Loading Bookings",
+          description: "Failed to load bookings. Please check your connection.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = async () => {
     setIsRefreshing(true);
-    loadBookings();
+    await loadBookings();
     setTimeout(() => setIsRefreshing(false), 500);
     toast({
-      title: "Refreshed",
+      title: "Refreshed ✓",
       description: "Bookings updated successfully",
     });
   };
 
-  const handleAccept = (bookingId) => {
+  const handleAccept = async (bookingId) => {
     try {
-      const storedBookings = localStorage.getItem('porterBookings');
       console.log('🔔 Accepting booking:', bookingId);
       
-      if (storedBookings) {
-        const allBookings = JSON.parse(storedBookings);
-        const updatedBookings = allBookings.map(b => 
-          b.id === bookingId 
-            ? { ...b, status: "accepted", acceptedAt: new Date().toISOString() }
-            : b
-        );
-        
-        localStorage.setItem('porterBookings', JSON.stringify(updatedBookings));
-        console.log('✅ Booking accepted and saved to localStorage:', updatedBookings);
-        
-        // Update local state immediately
-        setBookings(bookings.map(b => 
-          b.id === bookingId 
-            ? { ...b, status: "accepted", acceptedAt: new Date().toISOString() }
-            : b
-        ));
+      const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/accept`, {
+        method: 'PATCH',
+      });
 
-        toast({
-          title: "Request Accepted ✓",
-          description: "Passenger has been notified. Please be ready at the station.",
-        });
+      if (!response.ok) {
+        throw new Error('Failed to accept booking');
       }
+
+      const data = await response.json();
+      console.log('✅ Booking accepted:', data.booking);
+      
+      // Update local state immediately for better UX
+      setBookings(bookings.map(b => 
+        b.id === bookingId 
+          ? { ...b, status: "accepted", acceptedAt: new Date().toISOString() }
+          : b
+      ));
+
+      toast({
+        title: "Request Accepted ✓",
+        description: "Passenger has been notified. Please be ready at the station.",
+      });
     } catch (error) {
       console.error("❌ Error accepting booking:", error);
       toast({
@@ -123,33 +125,32 @@ const PorterDashboard = () => {
     }
   };
 
-  const handleComplete = (bookingId) => {
+  const handleComplete = async (bookingId) => {
     try {
-      const completedTime = new Date().toISOString();
-      const storedBookings = localStorage.getItem('porterBookings');
+      console.log('✅ Completing booking:', bookingId);
       
-      if (storedBookings) {
-        const allBookings = JSON.parse(storedBookings);
-        const updatedBookings = allBookings.map(b => 
-          b.id === bookingId 
-            ? { ...b, status: "completed", completedAt: completedTime }
-            : b
-        );
-        localStorage.setItem('porterBookings', JSON.stringify(updatedBookings));
-        console.log('✅ Booking completed:', bookingId);
-        
-        // Update local state
-        setBookings(bookings.map(b => 
-          b.id === bookingId 
-            ? { ...b, status: "completed", completedAt: completedTime }
-            : b
-        ));
+      const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/complete`, {
+        method: 'PATCH',
+      });
 
-        toast({
-          title: "Service Completed ✓",
-          description: "Payment will be processed and added to your earnings.",
-        });
+      if (!response.ok) {
+        throw new Error('Failed to complete booking');
       }
+
+      const data = await response.json();
+      console.log('✅ Booking completed:', data.booking);
+      
+      // Update local state
+      setBookings(bookings.map(b => 
+        b.id === bookingId 
+          ? { ...b, status: "completed", completedAt: new Date().toISOString() }
+          : b
+      ));
+
+      toast({
+        title: "Service Completed ✓",
+        description: "Payment will be processed and added to your earnings.",
+      });
     } catch (error) {
       console.error("❌ Error completing booking:", error);
       toast({
@@ -160,28 +161,28 @@ const PorterDashboard = () => {
     }
   };
 
-  const handleDecline = (bookingId) => {
+  const handleDecline = async (bookingId) => {
     try {
-      const storedBookings = localStorage.getItem('porterBookings');
+      console.log('❌ Declining booking:', bookingId);
       
-      if (storedBookings) {
-        const allBookings = JSON.parse(storedBookings);
-        const updatedBookings = allBookings.map(b => 
-          b.id === bookingId 
-            ? { ...b, status: "declined", declinedAt: new Date().toISOString() }
-            : b
-        );
-        localStorage.setItem('porterBookings', JSON.stringify(updatedBookings));
-        console.log('❌ Booking declined:', bookingId);
-        
-        // Remove from local state
-        setBookings(bookings.filter(b => b.id !== bookingId));
+      const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/decline`, {
+        method: 'PATCH',
+      });
 
-        toast({
-          title: "Request Declined",
-          description: "Booking request has been declined.",
-        });
+      if (!response.ok) {
+        throw new Error('Failed to decline booking');
       }
+
+      const data = await response.json();
+      console.log('❌ Booking declined:', data.booking);
+      
+      // Remove from local state
+      setBookings(bookings.filter(b => b.id !== bookingId));
+
+      toast({
+        title: "Request Declined",
+        description: "Booking request has been declined.",
+      });
     } catch (error) {
       console.error("❌ Error declining booking:", error);
       toast({

@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { mockPNRData, calculatePrice } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, IndianRupee } from "lucide-react";
+import { Loader2, CheckCircle2, IndianRupee, Train, MapPin, Calendar, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 
@@ -81,8 +81,8 @@ const BookPorter = () => {
         setPnrInfo(info);
 
         toast({
-          title: "PNR Verified!",
-          description: `Train ${info.trainNo} - ${info.trainName}. Please review details and fill in your information.`,
+          title: "PNR Verified! ✓",
+          description: `Train ${info.trainNo} - ${info.trainName}`,
         });
       } else {
         throw new Error("Invalid PNR or no data found");
@@ -96,7 +96,7 @@ const BookPorter = () => {
 
         toast({
           title: "PNR Verified (Demo Mode)",
-          description: `Train ${info.trainNo} - ${info.trainName}. Please review details and fill in your information.`,
+          description: `Train ${info.trainNo} - ${info.trainName}`,
         });
       } else {
         const errorMessage = axios.isAxiosError(error)
@@ -185,14 +185,16 @@ const BookPorter = () => {
         arrivalTime: pnrInfo.arrivalTime,
       },
       luggageDetails: {
-        numberOfBags: formData.numberOfBags,
-        weight: formData.weight,
+        numberOfBags: parseInt(formData.numberOfBags),
+        weight: parseInt(formData.weight),
         isLateNight: formData.isLateNight,
         isPriority: formData.isPriority,
       },
       pricing: pricing,
       notes: formData.notes,
     };
+
+    console.log('📦 Booking data prepared:', bookingData);
 
     // Simulate validation delay
     setTimeout(() => {
@@ -202,7 +204,7 @@ const BookPorter = () => {
       navigate("/available", { state: bookingData });
       
       toast({
-        title: "Details Verified",
+        title: "Details Verified ✓",
         description: "Showing available porters for your booking",
       });
     }, 1500);
@@ -274,7 +276,7 @@ const BookPorter = () => {
                           pnr: e.target.value.replace(/\D/g, "").slice(0, 10),
                         })
                       }
-                      placeholder="10 digit PNR"
+                      placeholder="10 digit PNR (try: 1234567890)"
                       maxLength={10}
                       required
                     />
@@ -282,11 +284,11 @@ const BookPorter = () => {
                       type="button"
                       onClick={handlePNRLookup}
                       variant="secondary"
-                      disabled={pnrLoading}
+                      disabled={pnrLoading || formData.pnr.length !== 10}
                     >
                       {pnrLoading ? (
                         <>
-                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Verifying...
                         </>
                       ) : (
@@ -295,59 +297,68 @@ const BookPorter = () => {
                     </Button>
                   </div>
                   {pnrInfo && (
-                    <div className="text-sm space-y-2 bg-blue-50 p-4 rounded-md border border-blue-200">
-                      <p className="text-blue-900 font-semibold flex items-center mb-2">
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        PNR Verified - Train Details
+                    <div className="text-sm space-y-3 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 shadow-sm">
+                      <p className="text-blue-900 font-semibold flex items-center mb-3">
+                        <CheckCircle2 className="w-5 h-5 mr-2 text-green-600" />
+                        PNR Verified Successfully
                       </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-3 rounded-md shadow-sm">
+                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
+                            <Train className="w-3 h-3 mr-1" />
                             Train
-                          </p>
-                          <p className="font-medium text-blue-900">
+                          </div>
+                          <p className="font-semibold text-blue-900">
                             {pnrInfo.trainNo} - {pnrInfo.trainName}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase">
+                        <div className="bg-white p-3 rounded-md shadow-sm">
+                          <p className="text-xs text-muted-foreground uppercase mb-1">
                             Coach
                           </p>
-                          <p className="font-medium text-blue-900">
+                          <p className="font-semibold text-blue-900">
                             {pnrInfo.coachNo}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase">
+                        <div className="bg-white p-3 rounded-md shadow-sm">
+                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
+                            <MapPin className="w-3 h-3 mr-1" />
                             From
+                          </div>
+                          <p className="font-semibold text-blue-900">
+                            {pnrInfo.boardingStation}
                           </p>
-                          <p className="font-medium text-blue-900">
-                            {pnrInfo.boardingStation} (
-                            {pnrInfo.boardingStationCode})
+                          <p className="text-xs text-muted-foreground">
+                            {pnrInfo.boardingStationCode}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase">
+                        <div className="bg-white p-3 rounded-md shadow-sm">
+                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
+                            <MapPin className="w-3 h-3 mr-1" />
                             To
+                          </div>
+                          <p className="font-semibold text-blue-900">
+                            {pnrInfo.destinationStation}
                           </p>
-                          <p className="font-medium text-blue-900">
-                            {pnrInfo.destinationStation} (
-                            {pnrInfo.destinationStationCode})
+                          <p className="text-xs text-muted-foreground">
+                            {pnrInfo.destinationStationCode}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase">
+                        <div className="bg-white p-3 rounded-md shadow-sm">
+                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
+                            <Calendar className="w-3 h-3 mr-1" />
                             Date of Journey
-                          </p>
-                          <p className="font-medium text-blue-900">
+                          </div>
+                          <p className="font-semibold text-blue-900">
                             {pnrInfo.dateOfJourney}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground uppercase">
+                        <div className="bg-white p-3 rounded-md shadow-sm">
+                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
+                            <Clock className="w-3 h-3 mr-1" />
                             Arrival Time
-                          </p>
-                          <p className="font-medium text-blue-900">
+                          </div>
+                          <p className="font-semibold text-blue-900">
                             {pnrInfo.arrivalTime}
                           </p>
                         </div>
@@ -367,6 +378,9 @@ const BookPorter = () => {
                     placeholder="e.g., New Delhi"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the station where you need porter service
+                  </p>
                 </div>
               </div>
 
@@ -380,6 +394,7 @@ const BookPorter = () => {
                       id="numberOfBags"
                       type="number"
                       min="1"
+                      max="20"
                       value={formData.numberOfBags}
                       onChange={(e) => {
                         const updatedData = {
@@ -399,6 +414,7 @@ const BookPorter = () => {
                       id="weight"
                       type="number"
                       min="1"
+                      max="200"
                       value={formData.weight}
                       onChange={(e) => {
                         const updatedData = { ...formData, weight: e.target.value };
@@ -411,7 +427,8 @@ const BookPorter = () => {
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
+                  <p className="text-sm font-medium">Additional Services</p>
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="lateNight"
@@ -423,7 +440,7 @@ const BookPorter = () => {
                       }}
                     />
                     <Label htmlFor="lateNight" className="text-sm cursor-pointer">
-                      Late Night Service (11 PM - 5 AM) +₹20
+                      Late Night Service (11 PM - 5 AM) <span className="font-semibold text-primary">+₹20</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -437,7 +454,7 @@ const BookPorter = () => {
                       }}
                     />
                     <Label htmlFor="priority" className="text-sm cursor-pointer">
-                      Priority Service +₹30
+                      Priority Service (Immediate assistance) <span className="font-semibold text-primary">+₹30</span>
                     </Label>
                   </div>
                 </div>
@@ -445,30 +462,30 @@ const BookPorter = () => {
 
               {/* Pricing Display */}
               {pricing && (
-                <div className="bg-primary/5 p-4 rounded-lg space-y-2">
-                  <h4 className="font-semibold flex items-center">
-                    <IndianRupee className="w-4 h-4 mr-1" />
+                <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-5 rounded-lg border-2 border-primary/20 shadow-sm">
+                  <h4 className="font-semibold flex items-center text-lg mb-3">
+                    <IndianRupee className="w-5 h-5 mr-2 text-primary" />
                     Estimated Fare
                   </h4>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between py-1">
                       <span className="text-muted-foreground">{pricing.description}</span>
-                      <span>₹{pricing.basePrice}</span>
+                      <span className="font-medium">₹{pricing.basePrice}</span>
                     </div>
                     {pricing.lateNightCharge > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Late Night</span>
-                        <span>₹{pricing.lateNightCharge}</span>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Late Night Charge</span>
+                        <span className="font-medium">₹{pricing.lateNightCharge}</span>
                       </div>
                     )}
                     {pricing.priorityCharge > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Priority</span>
-                        <span>₹{pricing.priorityCharge}</span>
+                      <div className="flex justify-between py-1">
+                        <span className="text-muted-foreground">Priority Service</span>
+                        <span className="font-medium">₹{pricing.priorityCharge}</span>
                       </div>
                     )}
-                    <div className="border-t pt-2 flex justify-between font-bold text-base">
-                      <span>Total</span>
+                    <div className="border-t-2 border-primary/30 pt-3 mt-2 flex justify-between font-bold text-lg">
+                      <span>Total Amount</span>
                       <span className="text-primary">₹{pricing.totalPrice}</span>
                     </div>
                   </div>
@@ -484,7 +501,7 @@ const BookPorter = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, notes: e.target.value })
                   }
-                  placeholder="Any special requirements or instructions..."
+                  placeholder="Any special requirements or instructions for the porter..."
                   rows={3}
                 />
               </div>
@@ -493,7 +510,7 @@ const BookPorter = () => {
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={loading}
+                disabled={loading || !pnrInfo}
               >
                 {loading ? (
                   <>
@@ -501,7 +518,7 @@ const BookPorter = () => {
                     Processing...
                   </>
                 ) : (
-                  "View Available Porters"
+                  "Find Available Porters →"
                 )}
               </Button>
             </form>

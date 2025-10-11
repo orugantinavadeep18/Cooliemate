@@ -16,8 +16,11 @@ import {
   Package,
   IndianRupee,
   ArrowLeft,
-  TrendingUp
+  TrendingUp,
+  XCircle
 } from "lucide-react";
+
+const API_BASE = 'http://localhost:5000';
 
 const AvailablePorters = () => {
   const location = useLocation();
@@ -29,6 +32,7 @@ const AvailablePorters = () => {
   const [requestSent, setRequestSent] = useState(false);
   const [waitingForResponse, setWaitingForResponse] = useState(false);
   const [porterAccepted, setPorterAccepted] = useState(false);
+  const [porterDeclined, setPorterDeclined] = useState(false);
   const [currentBookingId, setCurrentBookingId] = useState(null);
   const [showApproaching, setShowApproaching] = useState(false);
 
@@ -66,7 +70,7 @@ const AvailablePorters = () => {
     }
   }, [porterAccepted]);
 
-  // Check for porter acceptance in real-time
+  // Check for porter acceptance in real-time using backend API
   useEffect(() => {
     if (!requestSent || !currentBookingId) {
       console.log('⏸️ Not checking - requestSent:', requestSent, 'bookingId:', currentBookingId);
@@ -77,7 +81,7 @@ const AvailablePorters = () => {
     const startTime = Date.now();
     const timeoutDuration = 5 * 60 * 1000; // 5 minutes
 
-    const checkInterval = setInterval(() => {
+    const checkInterval = setInterval(async () => {
       // Check for timeout
       if (Date.now() - startTime > timeoutDuration) {
         clearInterval(checkInterval);
@@ -91,30 +95,38 @@ const AvailablePorters = () => {
       }
 
       try {
-        const storedBookings = localStorage.getItem('porterBookings');
-        console.log('🔍 Passenger checking localStorage:', storedBookings);
+        console.log('🔍 Checking booking status from backend...');
+        const response = await fetch(`${API_BASE}/api/bookings/${currentBookingId}`);
         
-        if (storedBookings) {
-          const bookings = JSON.parse(storedBookings);
-          console.log('📦 All bookings found:', bookings);
-          
-          const thisBooking = bookings.find(b => b.id === currentBookingId);
-          console.log('🎯 Current booking status:', thisBooking);
-          
-          if (thisBooking && thisBooking.status === "accepted") {
-            console.log('✅ BOOKING ACCEPTED! Stopping polling.');
-            clearInterval(checkInterval);
-            setWaitingForResponse(false);
-            setPorterAccepted(true);
-            toast({
-              title: "Request Accepted! 🎉",
-              description: `${porter.name} has accepted your request`,
-            });
-          } else {
-            console.log('⏳ Still waiting... Status:', thisBooking?.status);
-          }
+        if (!response.ok) {
+          console.error('❌ Failed to fetch booking:', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('📦 Booking data from backend:', data);
+        
+        if (data.booking && data.booking.status === "accepted") {
+          console.log('✅ BOOKING ACCEPTED! Stopping polling.');
+          clearInterval(checkInterval);
+          setWaitingForResponse(false);
+          setPorterAccepted(true);
+          toast({
+            title: "Request Accepted! 🎉",
+            description: `${porter.name} has accepted your request`,
+          });
+        } else if (data.booking && data.booking.status === "declined") {
+          console.log('❌ BOOKING DECLINED! Stopping polling.');
+          clearInterval(checkInterval);
+          setWaitingForResponse(false);
+          setPorterDeclined(true);
+          toast({
+            title: "Request Declined",
+            description: `${porter.name} is unable to accept this request`,
+            variant: "destructive",
+          });
         } else {
-          console.log('⚠️ No bookings in localStorage');
+          console.log('⏳ Still waiting... Status:', data.booking?.status);
         }
       } catch (error) {
         console.error("❌ Error checking booking status:", error);
@@ -128,7 +140,7 @@ const AvailablePorters = () => {
     };
   }, [requestSent, currentBookingId, porter.name, toast]);
 
-  const handleSendRequest = () => {
+  const handleSendRequest = async () => {
     if (!bookingData) {
       toast({
         title: "Error",
@@ -144,7 +156,6 @@ const AvailablePorters = () => {
     
     // Create booking request object
     const bookingRequest = {
-      id: `BK${Date.now()}`,
       porterId: porter.id,
       porterName: porter.name,
       passengerName: bookingData.personalDetails?.fullName || "Guest",
@@ -166,31 +177,29 @@ const AvailablePorters = () => {
       isPriority: bookingData.luggageDetails?.isPriority || false,
       totalPrice: bookingData.pricing?.totalPrice || 100,
       notes: bookingData.notes || "",
-      status: "pending",
-      requestedAt: new Date().toISOString(),
     };
 
     console.log('📝 Created booking request:', bookingRequest);
 
-    // Save to localStorage
+    // Send to backend API
     try {
-      const existingBookings = localStorage.getItem('porterBookings');
-      const bookings = existingBookings ? JSON.parse(existingBookings) : [];
-      
-      console.log('📚 Existing bookings before save:', bookings);
-      
-      bookings.push(bookingRequest);
-      localStorage.setItem('porterBookings', JSON.stringify(bookings));
-      
-      console.log('💾 Saved to localStorage. All bookings:', bookings);
-      console.log('✅ Booking ID:', bookingRequest.id);
-      
-      // Verify it was saved
-      const verification = localStorage.getItem('porterBookings');
-      console.log('🔍 Verification - localStorage now contains:', verification);
+      const response = await fetch(`${API_BASE}/api/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingRequest)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create booking');
+      }
+
+      const data = await response.json();
+      console.log('✅ Booking created successfully:', data);
       
       // Store current booking ID for tracking
-      setCurrentBookingId(bookingRequest.id);
+      setCurrentBookingId(data.booking.id);
       setRequestSent(true);
       setWaitingForResponse(true);
 
@@ -199,7 +208,7 @@ const AvailablePorters = () => {
         description: `Request sent to ${porter.name}. Waiting for acceptance...`,
       });
     } catch (error) {
-      console.error("❌ Error saving booking:", error);
+      console.error("❌ Error creating booking:", error);
       toast({
         title: "Error",
         description: "Failed to send request. Please try again.",
@@ -210,24 +219,27 @@ const AvailablePorters = () => {
     }
   };
 
-  const handleConfirmBooking = () => {
-    // Get the accepted booking details from localStorage
+  const handleConfirmBooking = async () => {
+    // Get the accepted booking details from backend
     try {
-      const storedBookings = localStorage.getItem('porterBookings');
-      if (storedBookings) {
-        const bookings = JSON.parse(storedBookings);
-        const acceptedBooking = bookings.find(b => b.id === currentBookingId);
-        
-        console.log('✅ Proceeding to confirmation with booking:', acceptedBooking);
-        
-        navigate("/", {
-          state: {
-            booking: acceptedBooking,
-            bookingData: bookingData,
-            assignedPorter: porter,
-          },
-        });
+      const response = await fetch(`${API_BASE}/api/bookings/${currentBookingId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch booking');
       }
+
+      const data = await response.json();
+      const acceptedBooking = data.booking;
+      
+      console.log('✅ Proceeding to confirmation with booking:', acceptedBooking);
+      
+      navigate("/", {
+        state: {
+          booking: acceptedBooking,
+          bookingData: bookingData,
+          assignedPorter: porter,
+        },
+      });
     } catch (error) {
       console.error("❌ Error loading booking:", error);
       toast({
@@ -249,7 +261,7 @@ const AvailablePorters = () => {
         <div className="max-w-4xl mx-auto mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/book-porter")}
+            onClick={() => navigate("/")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -452,7 +464,7 @@ const AvailablePorters = () => {
                           </div>
                           <div className="pt-3 border-t border-blue-200">
                             <p className="text-xs text-blue-600">
-                              ✓ Request saved to system
+                              ✓ Request saved to backend
                             </p>
                             <p className="text-xs text-blue-600">
                               ⏱ Auto-checking every 2 seconds
@@ -518,6 +530,92 @@ const AvailablePorters = () => {
                             <CheckCircle2 className="w-4 h-4 mr-2" />
                             Completed! back to home 
                           </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {porterDeclined && (
+                    <Card className="bg-red-50 border-red-200">
+                      <CardContent className="py-6">
+                        <div className="text-center space-y-4">
+                          <div className="flex justify-center">
+                            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                              <XCircle className="w-10 h-10 text-red-600" />
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-xl text-red-900 mb-2">
+                              Request Declined
+                            </h4>
+                            <p className="text-sm text-red-700 mb-4">
+                              We're sorry! {porter.name} is unable to accept your request at this time.
+                            </p>
+                            
+                            <div className="bg-white p-4 rounded-lg border border-red-200 mb-4">
+                              <p className="text-sm text-gray-700 mb-3">
+                                This could be due to:
+                              </p>
+                              <ul className="text-left text-xs text-gray-600 space-y-2">
+                                <li className="flex items-start">
+                                  <span className="text-red-500 mr-2">•</span>
+                                  <span>Porter already engaged with another passenger</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="text-red-500 mr-2">•</span>
+                                  <span>Unable to handle the luggage requirements</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="text-red-500 mr-2">•</span>
+                                  <span>Location or timing constraints</span>
+                                </li>
+                              </ul>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                              <p className="text-sm font-medium text-blue-900 mb-2">
+                                💡 What you can do:
+                              </p>
+                              <ul className="text-left text-xs text-blue-700 space-y-2">
+                                <li className="flex items-start">
+                                  <span className="text-blue-500 mr-2">✓</span>
+                                  <span>Try booking again in a few minutes</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="text-blue-500 mr-2">✓</span>
+                                  <span>Check if other porters are available</span>
+                                </li>
+                                <li className="flex items-start">
+                                  <span className="text-blue-500 mr-2">✓</span>
+                                  <span>Contact station helpdesk for assistance</span>
+                                </li>
+                              </ul>
+                            </div>
+
+                            {currentBookingId && (
+                              <div className="text-xs text-gray-500 mb-4">
+                                Booking Reference: <span className="font-mono">{currentBookingId}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex gap-3">
+                            <Button
+                              onClick={() => navigate("/book-porter")}
+                              variant="outline"
+                              className="flex-1"
+                              size="lg"
+                            >
+                              Try Again
+                            </Button>
+                            <Button
+                              onClick={() => navigate("/")}
+                              className="flex-1"
+                              size="lg"
+                            >
+                              Back to Home
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
