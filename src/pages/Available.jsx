@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { linkVisitToBooking } from '@/utils/analytics';
 import { 
   Loader2, 
   CheckCircle2, 
@@ -203,6 +204,9 @@ const AvailablePorters = () => {
       setRequestSent(true);
       setWaitingForResponse(true);
 
+      // Link analytics visit to booking
+      await linkVisitToBooking(data.booking.id);
+
       toast({
         title: "Request Sent ✓",
         description: `Request sent to ${porter.name}. Waiting for acceptance...`,
@@ -261,7 +265,7 @@ const AvailablePorters = () => {
         <div className="max-w-4xl mx-auto mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/book-porter")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

@@ -1,393 +1,307 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/Navbar";
-import { Users, Briefcase, IndianRupee, TrendingUp, Phone, Mail, MapPin, Calendar, CheckCircle2 } from "lucide-react";
-import { mockPorters, getAllBookings, assignPorterToBooking } from "@/lib/mockData";
-import { useToast } from "@/hooks/use-toast";
-import Footer from "../pages/Footer"; 
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Star,
+  Eye,
+  RefreshCw,
+  Download
+} from "lucide-react";
 
 const AdminDashboard = () => {
-  const { toast } = useToast();
-  const [bookings, setBookings] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState('all');
 
   useEffect(() => {
-    setBookings(getAllBookings());
-  }, []);
+    fetchAnalytics();
+  }, [dateRange]);
 
-  const handleAssignPorter = (bookingId, porterName) => {
-    const porter = mockPorters.find(p => p.name === porterName);
-    if (porter) {
-      assignPorterToBooking(bookingId, porterName, porter.id);
-      setBookings(getAllBookings());
-      toast({
-        title: "Porter Assigned",
-        description: `${porterName} has been assigned to this booking`,
-      });
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:5000/api/analytics/dashboard`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setAnalytics(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const stats = {
-    totalBookings: bookings.length,
-    activePorters: mockPorters.length,
-    totalRevenue: bookings.reduce((sum, b) => sum + b.amount, 0),
-    pendingAssignments: bookings.filter(b => !b.assignedPorter).length,
-    completedBookings: bookings.filter(b => b.status === "completed").length,
+  const getDeviceIcon = (device) => {
+    switch(device) {
+      case 'mobile': return <Smartphone className="w-4 h-4" />;
+      case 'tablet': return <Tablet className="w-4 h-4" />;
+      default: return <Monitor className="w-4 h-4" />;
+    }
   };
 
-  const completedBookings = bookings.filter(b => b.status === "completed");
-  const activeBookings = bookings.filter(b => b.status !== "completed");
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'accepted': return 'bg-blue-100 text-blue-700';
+      case 'pending': return 'bg-yellow-100 text-yellow-700';
+      case 'declined': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Failed to load analytics</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-b from-background to-primary/5">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage bookings, passengers, and porters</p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground">CooliMate Analytics & Insights</p>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={fetchAnalytics}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button>
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Card className="shadow-card">
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Bookings</p>
-                  <p className="text-2xl font-bold">{stats.totalBookings}</p>
-                </div>
-                <Briefcase className="w-8 h-8 text-primary" />
+              <div className="flex items-center justify-between mb-2">
+                <Eye className="w-8 h-8 text-blue-600" />
+                <Badge variant="secondary">Total</Badge>
               </div>
+              <p className="text-3xl font-bold text-blue-600">
+                {analytics.overview.totalVisits}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Total Visits</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Porters</p>
-                  <p className="text-2xl font-bold">{stats.activePorters}</p>
-                </div>
-                <Users className="w-8 h-8 text-blue-600" />
+              <div className="flex items-center justify-between mb-2">
+                <Users className="w-8 h-8 text-purple-600" />
+                <Badge variant="secondary">Unique</Badge>
               </div>
+              <p className="text-3xl font-bold text-purple-600">
+                {analytics.overview.uniqueVisitors}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Unique Visitors</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-card">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">₹{stats.totalRevenue}</p>
-                </div>
-                <IndianRupee className="w-8 h-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold">{stats.pendingAssignments}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{stats.completedBookings}</p>
-                </div>
+              <div className="flex items-center justify-between mb-2">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
+                <Badge variant="secondary">Bookings</Badge>
               </div>
+              <p className="text-3xl font-bold text-green-600">
+                {analytics.overview.totalBookings}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Total Bookings</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <TrendingUp className="w-8 h-8 text-orange-600" />
+                <Badge variant="secondary">Rate</Badge>
+              </div>
+              <p className="text-3xl font-bold text-orange-600">
+                {analytics.overview.conversionRate}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Conversion Rate</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-primary/10 to-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <DollarSign className="w-8 h-8 text-primary" />
+                <Badge>Revenue</Badge>
+              </div>
+              <p className="text-3xl font-bold text-primary">
+                ₹{analytics.overview.totalRevenue}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Total Revenue</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Tabs for Active and Completed Bookings */}
-        <Tabs defaultValue="active" className="mb-8">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="active">Active Bookings ({activeBookings.length})</TabsTrigger>
-            <TabsTrigger value="completed">Completed ({completedBookings.length})</TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Bookings by Status */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Bookings by Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(analytics.bookingsByStatus).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${
+                        status === 'completed' ? 'bg-green-500' :
+                        status === 'accepted' ? 'bg-blue-500' :
+                        status === 'pending' ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`} />
+                      <span className="font-medium capitalize">{status}</span>
+                    </div>
+                    <Badge className={getStatusColor(status)}>{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Active Bookings */}
-          <TabsContent value="active">
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Active Bookings - Passenger Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {activeBookings.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No active bookings</p>
-                  ) : (
-                    activeBookings.map((booking) => (
-                      <div
-                        key={booking.id}
-                        className="p-4 border rounded-lg hover:bg-muted/50 transition-colors space-y-4"
-                      >
-                        {/* Passenger Info Header */}
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-bold text-lg">{booking.passengerName}</h3>
-                              <Badge variant={booking.assignedPorter ? "default" : "secondary"}>
-                                {booking.status}
-                              </Badge>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                              <div className="flex items-center text-muted-foreground">
-                                <Phone className="w-4 h-4 mr-2" />
-                                {booking.phone}
-                              </div>
-                              {booking.email && (
-                                <div className="flex items-center text-muted-foreground">
-                                  <Mail className="w-4 h-4 mr-2" />
-                                  {booking.email}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Booking Details Grid */}
-                        <div className="bg-muted/30 p-4 rounded-lg">
-                          <h4 className="font-semibold mb-3 text-sm">Booking Details</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <p className="text-muted-foreground text-xs">PNR Number</p>
-                              <p className="font-medium">{booking.pnr}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Train</p>
-                              <p className="font-medium">{booking.trainNo} - {booking.trainName}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Coach</p>
-                              <p className="font-medium">{booking.coachNo}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Station</p>
-                              <p className="font-medium flex items-center">
-                                <MapPin className="w-3 h-3 mr-1" />
-                                {booking.station}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Travel Date & Time</p>
-                              <p className="font-medium flex items-center">
-                                <Calendar className="w-3 h-3 mr-1" />
-                                {booking.date} at {booking.time}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Luggage</p>
-                              <p className="font-medium">{booking.bags} bags, {booking.weight} kg</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Amount</p>
-                              <p className="font-bold text-primary">₹{booking.amount}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Booked At</p>
-                              <p className="font-medium">{booking.bookedAt}</p>
-                            </div>
-                          </div>
-                          {booking.notes && (
-                            <div className="mt-3 pt-3 border-t">
-                              <p className="text-muted-foreground text-xs">Special Notes</p>
-                              <p className="text-sm mt-1">{booking.notes}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Porter Assignment */}
-                        <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between pt-2 border-t">
-                          {booking.assignedPorter ? (
-                            <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg flex-1">
-                              <p className="text-xs text-muted-foreground mb-1">Assigned Porter</p>
-                              <p className="font-semibold text-green-700 dark:text-green-400">
-                                {booking.assignedPorter}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="flex-1">
-                              <p className="text-xs text-muted-foreground mb-2">Assign Porter</p>
-                              <Select onValueChange={(value) => handleAssignPorter(booking.id, value)}>
-                                <SelectTrigger className="w-full md:w-[200px]">
-                                  <SelectValue placeholder="Select Porter" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {mockPorters.map((porter) => (
-                                    <SelectItem key={porter.id} value={porter.name}>
-                                      {porter.name} - {porter.station}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                        </div>
+          {/* Device Statistics */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Device Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(analytics.deviceStats).map(([device, count]) => (
+                  <div key={device} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {getDeviceIcon(device)}
+                      <span className="font-medium capitalize">{device}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full"
+                          style={{ 
+                            width: `${(count / analytics.overview.totalVisits) * 100}%` 
+                          }}
+                        />
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Completed Bookings */}
-          <TabsContent value="completed">
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Completed Bookings - With Porter Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {completedBookings.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No completed bookings yet</p>
-                  ) : (
-                    completedBookings.map((booking) => (
-                      <div
-                        key={booking.id}
-                        className="p-4 border-2 border-green-200 dark:border-green-800 rounded-lg bg-green-50/50 dark:bg-green-950/20 space-y-4"
-                      >
-                        {/* Header with completion badge */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
-                              <CheckCircle2 className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-lg">{booking.passengerName}</h3>
-                              <p className="text-sm text-muted-foreground">Completed by {booking.assignedPorter}</p>
-                            </div>
-                          </div>
-                          <Badge className="bg-green-600">Completed</Badge>
-                        </div>
-
-                        {/* Passenger Details */}
-                        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg">
-                          <h4 className="font-semibold mb-3 text-sm">Passenger Details</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <p className="text-muted-foreground text-xs">Contact</p>
-                              <p className="font-medium">{booking.phone}</p>
-                              {booking.email && <p className="text-xs text-muted-foreground">{booking.email}</p>}
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">PNR / Train</p>
-                              <p className="font-medium">{booking.pnr}</p>
-                              <p className="text-xs">{booking.trainNo} - Coach {booking.coachNo}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Station</p>
-                              <p className="font-medium">{booking.station}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Luggage</p>
-                              <p className="font-medium">{booking.bags} bags ({booking.weight} kg)</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Travel Date</p>
-                              <p className="font-medium">{booking.date} at {booking.time}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Amount Paid</p>
-                              <p className="font-bold text-green-700 dark:text-green-400">₹{booking.amount}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Porter Performance Info */}
-                        <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
-                          <h4 className="font-semibold mb-3 text-sm">Porter Performance</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <p className="text-muted-foreground text-xs">Porter Name</p>
-                              <p className="font-semibold text-blue-700 dark:text-blue-400">{booking.assignedPorter}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Booking Accepted</p>
-                              <p className="font-medium">{booking.bookedAt}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Completed At</p>
-                              <p className="font-medium text-green-700 dark:text-green-400">
-                                {booking.completedAt || "Recently completed"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Porter Management */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Available Porters</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockPorters.map((porter) => {
-                const porterBookings = bookings.filter(b => b.porterId === porter.id);
-                const completedCount = porterBookings.filter(b => b.status === "completed").length;
-                const activeCount = porterBookings.filter(b => b.status !== "completed").length;
-
-                return (
-                  <div key={porter.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-lg">
-                        {porter.avatar}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-lg">{porter.name}</h4>
-                        <p className="text-sm text-muted-foreground flex items-center">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {porter.station}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          ⭐ {porter.rating} • {porter.experience}
-                        </p>
-                        <div className="mt-3 pt-3 border-t flex justify-between text-xs">
-                          <div>
-                            <p className="text-muted-foreground">Active</p>
-                            <p className="font-bold text-blue-600">{activeCount}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Completed</p>
-                            <p className="font-bold text-green-600">{completedCount}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Total</p>
-                            <p className="font-bold">{porterBookings.length}</p>
-                          </div>
-                        </div>
-                      </div>
+                      <Badge variant="secondary">{count}</Badge>
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Top Rated Porters */}
+        {analytics.topPorters && analytics.topPorters.length > 0 && (
+          <Card className="shadow-lg mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                Top Rated Porters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {analytics.topPorters.map((porter, index) => (
+                  <Card key={porter._id} className="border-2 hover:shadow-md transition-shadow">
+                    <CardContent className="pt-6 text-center">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                        <span className="text-xl font-bold text-primary">#{index + 1}</span>
+                      </div>
+                      <h3 className="font-bold text-lg mb-1">{porter.porterName}</h3>
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                        <span className="font-bold">{porter.avgRating.toFixed(1)}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {porter.totalReviews} reviews
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recent Bookings */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Recent Bookings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4">Booking ID</th>
+                    <th className="text-left py-3 px-4">Passenger</th>
+                    <th className="text-left py-3 px-4">Phone</th>
+                    <th className="text-left py-3 px-4">Station</th>
+                    <th className="text-left py-3 px-4">Train</th>
+                    <th className="text-left py-3 px-4">Status</th>
+                    <th className="text-left py-3 px-4">Amount</th>
+                    <th className="text-left py-3 px-4">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.recentBookings.map((booking) => (
+                    <tr key={booking.id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-4 font-mono text-sm">{booking.id}</td>
+                      <td className="py-3 px-4 font-medium">{booking.passengerName}</td>
+                      <td className="py-3 px-4">{booking.phone}</td>
+                      <td className="py-3 px-4">{booking.station}</td>
+                      <td className="py-3 px-4">{booking.trainNo}</td>
+                      <td className="py-3 px-4">
+                        <Badge className={getStatusColor(booking.status)}>
+                          {booking.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 font-bold text-primary">₹{booking.totalPrice}</td>
+                      <td className="py-3 px-4 text-sm text-muted-foreground">
+                        {new Date(booking.requestedAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
-        <Footer />
       </div>
     </div>
   );

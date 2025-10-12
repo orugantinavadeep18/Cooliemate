@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
 import { motion } from "framer-motion";
+import HomepageReviews from '@/components/HomepageReviews';
 
 const Home = () => {
   const features = [
@@ -261,6 +262,7 @@ const Home = () => {
       </section>
 
       <Footer />
+      <HomepageReviews />
     </div>
   );
 };
