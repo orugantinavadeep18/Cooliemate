@@ -17,6 +17,8 @@ import {
   Download
 } from "lucide-react";
 
+const API_BASE = 'https://cooliemate.onrender.com';
+
 const AdminDashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ const AdminDashboard = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/analytics/dashboard`);
+      const response = await fetch(`${API_BASE}/api/analytics/dashboard`);
       const data = await response.json();
       
       if (data.success) {
@@ -74,7 +76,14 @@ const AdminDashboard = () => {
   if (!analytics) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Failed to load analytics</p>
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-2">Failed to load analytics</p>
+          <p className="text-muted-foreground mb-4">Please check your connection</p>
+          <Button onClick={fetchAnalytics}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
