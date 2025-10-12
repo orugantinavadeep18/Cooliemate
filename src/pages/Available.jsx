@@ -18,7 +18,8 @@ import {
   IndianRupee,
   ArrowLeft,
   TrendingUp,
-  XCircle
+  XCircle,
+  X
 } from "lucide-react";
 
 const API_BASE = 'https://cooliemate.onrender.com';
@@ -36,6 +37,10 @@ const AvailablePorters = () => {
   const [porterDeclined, setPorterDeclined] = useState(false);
   const [currentBookingId, setCurrentBookingId] = useState(null);
   const [showApproaching, setShowApproaching] = useState(false);
+  const [showReviewPopup, setShowReviewPopup] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   // Available porter at the station
   const porter = {
@@ -224,33 +229,81 @@ const AvailablePorters = () => {
   };
 
   const handleConfirmBooking = async () => {
-    // Get the accepted booking details from backend
+    // Show review popup instead of navigating immediately
+    setShowReviewPopup(true);
+  };
+
+  const handleSkipReview = () => {
+    // Navigate to home without review
+    navigate("/", {
+      state: {
+        booking: { id: currentBookingId },
+        bookingData: bookingData,
+        assignedPorter: porter,
+      },
+    });
+  };
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a star rating",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingReview(true);
+
     try {
-      const response = await fetch(`${API_BASE}/api/bookings/${currentBookingId}`);
-      
+      const reviewData = {
+        bookingId: currentBookingId,
+        userName: bookingData.personalDetails?.fullName,
+        userPhone: bookingData.personalDetails?.phone,
+        rating: rating,
+        comment: review || "Great service!",
+        experience: rating >= 4 ? "excellent" : rating >= 3 ? "good" : rating >= 2 ? "average" : "poor",
+        porterRating: rating,
+        porterId: porter.id,
+        porterName: porter.name
+      };
+
+      const response = await fetch(`${API_BASE}/api/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData)
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to fetch booking');
+        throw new Error('Failed to submit review');
       }
 
-      const data = await response.json();
-      const acceptedBooking = data.booking;
-      
-      console.log('✅ Proceeding to confirmation with booking:', acceptedBooking);
-      
+      toast({
+        title: "Thank You! ⭐",
+        description: "Your review has been submitted successfully",
+      });
+
+      // Navigate to home after successful review
       navigate("/", {
         state: {
-          booking: acceptedBooking,
+          booking: { id: currentBookingId },
           bookingData: bookingData,
           assignedPorter: porter,
         },
       });
     } catch (error) {
-      console.error("❌ Error loading booking:", error);
+      console.error("❌ Error submitting review:", error);
       toast({
-        title: "Error",
-        description: "Failed to load booking details.",
-        variant: "destructive",
+        title: "Review Error",
+        description: "Failed to submit review, but you can continue to home",
       });
+      // Still navigate even if review fails
+      handleSkipReview();
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -630,6 +683,112 @@ const AvailablePorters = () => {
           </div>
         </div>
       </div>
+
+      {/* Review Popup Modal */}
+      {showReviewPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="max-w-md w-full shadow-2xl">
+            <CardHeader className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-2"
+                onClick={handleSkipReview}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <CardTitle className="text-2xl text-center">
+                Rate Your Experience
+              </CardTitle>
+              <p className="text-center text-muted-foreground text-sm mt-2">
+                How was your service with {porter.name}?
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Star Rating */}
+              <div className="flex flex-col items-center">
+                <p className="text-sm font-medium mb-3">Your Rating</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`w-10 h-10 ${
+                          star <= rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {rating > 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {rating === 5 && "Excellent! ⭐"}
+                    {rating === 4 && "Very Good! 😊"}
+                    {rating === 3 && "Good 👍"}
+                    {rating === 2 && "Could be better 🤔"}
+                    {rating === 1 && "Needs improvement 😞"}
+                  </p>
+                )}
+              </div>
+
+              {/* Review Text */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Share your experience (Optional)
+                </label>
+                <textarea
+                  value={review}
+                  onChange={(e) => setReview(e.target.value)}
+                  placeholder="Tell us about your experience with the porter service..."
+                  className="w-full min-h-[100px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                  maxLength={500}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {review.length}/500 characters
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleSkipReview}
+                  disabled={submittingReview}
+                >
+                  Skip
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview || rating === 0}
+                >
+                  {submittingReview ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Submit Review
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Your feedback helps us improve our service
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
