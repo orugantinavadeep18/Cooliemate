@@ -44,7 +44,7 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
   const fetchNotifications = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/notifications/${userId}?type=${userType}`
+        `https://cooliemate.onrender.com/api/notifications/${userId}?type=${userType}`
       );
       const data = await response.json();
 
@@ -99,7 +99,7 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
   const markAsRead = async (notificationId) => {
     try {
       await fetch(
-        `http://localhost:5000/api/notifications/${notificationId}/read`,
+        `https://cooliemate.onrender.com/api/notifications/${notificationId}/read`,
         { method: 'PATCH' }
       );
       
@@ -117,7 +117,7 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
   const markAllAsRead = async () => {
     try {
       await fetch(
-        `http://localhost:5000/api/notifications/${userId}/read-all`,
+        `https://cooliemate.onrender.com/api/notifications/${userId}/read-all`,
         { method: 'PATCH' }
       );
       

@@ -14,7 +14,7 @@ const HomepageReviews = () => {
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/reviews/public');
+      const response = await fetch('https://cooliemate.onrender.com/api/reviews/public');
       const data = await response.json();
 
       if (data.success) {
