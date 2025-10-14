@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
 import { motion } from "framer-motion";
-import HomepageReviews from '@/components/HomepageReviews';
 
 const Home = () => {
   const features = [
@@ -25,7 +24,7 @@ const Home = () => {
   const staggerContainer = { hidden: {}, visible: { transition: { staggerChildren: 0.2 } } };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-24">
       <Navbar />
 
       {/* Hero Section */}
@@ -35,9 +34,10 @@ const Home = () => {
           backgroundImage: `url('/img1.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          filter: 'brightness(0.9)', // makes the image lighter for better readability
         }}
       >
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-transparent" />
         <div className="container mx-auto px-4 relative">
           <motion.div
             className="max-w-3xl mx-auto text-center text-white"
@@ -46,13 +46,13 @@ const Home = () => {
             variants={fadeUp}
             transition={{ duration: 1 }}
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg">
-              CoolieMate
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 text-yellow-400 drop-shadow-xl">
+             Welcome!
             </h1>
-            <p className="text-xl md:text-2xl mb-4 text-gray-100 drop-shadow-md">
+            <p className="text-xl md:text-2xl mb-4 text-white font-medium">
               Your Personal Coolie Booking App
             </p>
-            <p className="text-lg md:text-xl mb-8 text-gray-200 drop-shadow-md">
+            <p className="text-lg md:text-xl mb-8 text-white italic">
               "Luggage help at your fingertips"
             </p>
             <Link to="/book">
@@ -67,6 +67,13 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Scrolling Tag */}
+      <div className="bg-blue-700 text-black text-2xl py-2">
+        <marquee behavior="scroll" direction="left" scrollamount="10" className="text-base font-medium tracking-wide">
+          🚉 Now available at Kurnool Railway Station! — Book your porter hassle-free with CoolieMate.
+        </marquee>
+      </div>
 
       {/* Features Section */}
       <section className="py-16 md:py-20 bg-muted/30">
@@ -114,7 +121,7 @@ const Home = () => {
                 <motion.div
                   key={index}
                   variants={fadeUp}
-                  className="shadow-card hover:shadow-elevated transition-shadow duration-300"
+                  className="shadow-card hover:shadow-elevated transition-shadow duration-300 bg-white rounded-xl"
                 >
                   <CardContent className="pt-6">
                     <div className="flex flex-col items-center text-center space-y-4">
@@ -262,7 +269,7 @@ const Home = () => {
       </section>
 
       <Footer />
-      <HomepageReviews />
+      {/* <HomepageReviews /> */}
     </div>
   );
 };

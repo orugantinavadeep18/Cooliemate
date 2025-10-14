@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import BookPorter from "./pages/BookPorter";
 import PorterLogin from "./pages/PorterLogin";
-import AdminLogin from "./pages/AdminLogin";
+// import AdminLogin from "./pages/AdminLogin";
+import PorterRegistration from "./pages/porterregi";
 import PorterDashboard from "./pages/PorterDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -25,13 +26,13 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/book" element={<BookPorter />} />
           <Route path="/porter-login" element={<PorterLogin />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
+          {/* <Route path="/admin-login" element={<AdminLogin />} /> */}
           <Route path="/porter-dashboard" element={<PorterDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           {/* <Route path="/porter-registration" element={<PorterRegistration/>} /> */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
            <Route path="/available" element={<AvailablePorters/>} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/porter-registration" element={<PorterRegistration/>} />
            <Route path="/about" element={<AboutUs/>} />
         </Routes>
       </BrowserRouter>
