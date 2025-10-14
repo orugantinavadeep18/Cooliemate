@@ -18,8 +18,11 @@ const HomepageReviews = () => {
       const data = await response.json();
 
       if (data.success) {
-        setReviews(data.reviews);
-        setStats(data.stats);
+        setReviews(data.reviews || []);
+        setStats({
+          avgRating: data.stats?.avgRating ?? 0,
+          totalReviews: data.stats?.totalReviews ?? 0
+        });
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -75,7 +78,7 @@ const HomepageReviews = () => {
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Star className="w-8 h-8 fill-yellow-400 text-yellow-400" />
                 <span className="text-4xl font-bold text-primary">
-                  {stats.avgRating.toFixed(1)}
+                  {stats.avgRating != null ? stats.avgRating.toFixed(1) : "0.0"}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">Average Rating</p>
@@ -85,7 +88,7 @@ const HomepageReviews = () => {
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Users className="w-8 h-8 text-primary" />
                 <span className="text-4xl font-bold text-primary">
-                  {stats.totalReviews}+
+                  {stats.totalReviews ?? 0}+
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">Happy Customers</p>
@@ -109,10 +112,8 @@ const HomepageReviews = () => {
                   className="shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 border-t-4 border-primary relative overflow-hidden"
                 >
                   <CardContent className="pt-6">
-                    {/* Quote Icon */}
                     <Quote className="absolute top-4 right-4 w-8 h-8 text-primary/10" />
 
-                    {/* Rating Stars */}
                     <div className="flex items-center gap-1 mb-3">
                       {[...Array(5)].map((_, i) => (
                         <Star
@@ -126,17 +127,14 @@ const HomepageReviews = () => {
                       ))}
                     </div>
 
-                    {/* Experience Badge */}
                     <Badge className={`${experienceBadge.color} mb-3`}>
                       {experienceBadge.label}
                     </Badge>
 
-                    {/* Review Comment */}
                     <p className="text-muted-foreground leading-relaxed mb-4 line-clamp-4">
                       "{review.comment}"
                     </p>
 
-                    {/* Customer Info */}
                     <div className="flex items-center justify-between pt-4 border-t">
                       <div>
                         <p className="font-semibold text-sm">{review.userName}</p>
@@ -152,7 +150,6 @@ const HomepageReviews = () => {
                       )}
                     </div>
 
-                    {/* Verified Badge */}
                     <div className="absolute bottom-4 right-4">
                       <Badge variant="outline" className="text-xs bg-white">
                         ✓ Verified
@@ -165,7 +162,6 @@ const HomepageReviews = () => {
           </div>
         )}
 
-        {/* Trust Indicators */}
         <div className="mt-12 text-center">
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <TrendingUp className="w-5 h-5 text-green-600" />
