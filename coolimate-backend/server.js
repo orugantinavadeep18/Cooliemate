@@ -1,6 +1,6 @@
-// server.js - CooliMate Backend Server (PostgreSQL Version)
+// server.js - CooliMate Backend Server (Complete with Analytics, Notifications & Reviews)
 const express = require('express');
-const { Sequelize, DataTypes, Op } = require('sequelize');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
@@ -13,30 +13,21 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// ==================== POSTGRESQL CONNECTION ====================
-const sequelize = new Sequelize(process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/coolimate', {
-  dialect: 'postgres',
-  logging: false, // Set to console.log to see SQL queries
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
-  }
-});
-
-// Test connection
+// ==================== MONGODB CONNECTION WITH RETRY LOGIC ====================
 const connectDB = async () => {
   try {
-    await sequelize.authenticate();
-    console.log('✅ PostgreSQL Connected Successfully');
-    console.log(`📦 Database: ${sequelize.config.database}`);
-    
-    // Sync all models with database
-    await sequelize.sync({ alter: true }); // Use { force: true } to drop tables on restart
-    console.log('✅ Database models synchronized');
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/coolimate', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+    });
+
+    console.log('✅ MongoDB Connected Successfully');
+    console.log(`📍 Database Host: ${conn.connection.host}`);
+    console.log(`📦 Database Name: ${conn.connection.name}`);
   } catch (error) {
-    console.error('❌ PostgreSQL Connection Error:', error.message);
+    console.error('❌ MongoDB Connection Error:', error.message);
     console.log('🔄 Retrying connection in 5 seconds...');
     setTimeout(connectDB, 5000);
   }
@@ -44,9 +35,22 @@ const connectDB = async () => {
 
 connectDB();
 
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB connection error:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(connectDB, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected successfully');
+});
+
 // Middleware to check DB connection
 app.use((req, res, next) => {
-  if (sequelize.connectionManager.pool._count === 0) {
+  if (mongoose.connection.readyState !== 1) {
     return res.status(503).json({ 
       error: 'Database temporarily unavailable',
       message: 'Please try again in a moment'
@@ -55,296 +59,132 @@ app.use((req, res, next) => {
   next();
 });
 
-// ==================== MODELS ====================
+// ==================== SCHEMAS ====================
 
-// Booking Model
-const Booking = sequelize.define('Booking', {
-  id: {
-    type: DataTypes.STRING,
-    primaryKey: true,
-    unique: true
-  },
-  porterId: {
-    type: DataTypes.STRING,
-    allowNull: false,
+// Booking Schema
+const bookingSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  porterId: { type: String, required: true, index: true },
+  porterName: { type: String, required: true },
+  passengerName: { type: String, required: true },
+  phone: { type: String, required: true },
+  pnr: { type: String, required: true },
+  station: { type: String, required: true },
+  trainNo: { type: String, required: true },
+  trainName: { type: String, required: true },
+  coachNo: { type: String, required: true },
+  boardingStation: { type: String, required: true },
+  boardingStationCode: { type: String, required: true },
+  destinationStation: { type: String, required: true },
+  destinationStationCode: { type: String, required: true },
+  dateOfJourney: { type: String, required: true },
+  arrivalTime: { type: String, required: true },
+  numberOfBags: { type: Number, required: true },
+  weight: { type: Number, required: true },
+  isLateNight: { type: Boolean, default: false },
+  isPriority: { type: Boolean, default: false },
+  totalPrice: { type: Number, required: true },
+  notes: { type: String, default: '' },
+  status: { 
+    type: String, 
+    enum: ['pending', 'accepted', 'completed', 'declined'],
+    default: 'pending',
     index: true
   },
-  porterName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  passengerName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  phone: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  pnr: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  station: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  trainNo: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  trainName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  coachNo: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  boardingStation: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  boardingStationCode: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  destinationStation: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  destinationStationCode: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  dateOfJourney: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  arrivalTime: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  numberOfBags: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
-  weight: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  isLateNight: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  isPriority: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  totalPrice: {
-    type: DataTypes.FLOAT,
-    allowNull: false
-  },
-  notes: {
-    type: DataTypes.TEXT,
-    defaultValue: ''
-  },
-  status: {
-    type: DataTypes.ENUM('pending', 'accepted', 'completed', 'declined'),
-    defaultValue: 'pending',
-    index: true
-  },
-  requestedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  acceptedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
-  completedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
-  declinedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  }
+  requestedAt: { type: Date, default: Date.now },
+  acceptedAt: { type: Date },
+  completedAt: { type: Date },
+  declinedAt: { type: Date }
 }, {
-  timestamps: true,
-  tableName: 'bookings'
+  timestamps: true
 });
 
-// Visit Model
-const Visit = sequelize.define('Visit', {
-  sessionId: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false
-  },
-  userAgent: {
-    type: DataTypes.TEXT
-  },
-  ipAddress: {
-    type: DataTypes.STRING
-  },
-  device: {
-    type: DataTypes.STRING
-  },
-  browser: {
-    type: DataTypes.STRING
-  },
-  os: {
-    type: DataTypes.STRING
-  },
+const Booking = mongoose.model('Booking', bookingSchema);
+
+// Analytics/Visit Schema
+const visitSchema = new mongoose.Schema({
+  sessionId: { type: String, required: true, unique: true },
+  userAgent: String,
+  ipAddress: String,
+  device: String,
+  browser: String,
+  os: String,
   location: {
-    type: DataTypes.JSONB,
-    defaultValue: {}
+    city: String,
+    region: String,
+    country: String
   },
-  pages: {
-    type: DataTypes.JSONB,
-    defaultValue: []
-  },
-  firstVisit: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  lastVisit: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  totalVisits: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1
-  },
-  isBookingCompleted: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  bookingId: {
-    type: DataTypes.STRING,
-    allowNull: true
-  }
+  pages: [{
+    path: String,
+    timestamp: Date,
+    duration: Number
+  }],
+  firstVisit: { type: Date, default: Date.now },
+  lastVisit: { type: Date, default: Date.now },
+  totalVisits: { type: Number, default: 1 },
+  isBookingCompleted: { type: Boolean, default: false },
+  bookingId: String
 }, {
-  timestamps: true,
-  tableName: 'visits'
+  timestamps: true
 });
 
-// Review Model
-const Review = sequelize.define('Review', {
-  bookingId: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false
-  },
-  userId: {
-    type: DataTypes.STRING
-  },
-  userName: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  userPhone: {
-    type: DataTypes.STRING
-  },
-  rating: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    validate: {
-      min: 1,
-      max: 5
-    }
-  },
-  comment: {
-    type: DataTypes.TEXT,
-    allowNull: false
-  },
+const Visit = mongoose.model('Visit', visitSchema);
+
+// Review Schema
+const reviewSchema = new mongoose.Schema({
+  bookingId: { type: String, required: true, unique: true },
+  userId: String,
+  userName: { type: String, required: true },
+  userPhone: String,
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
   experience: {
-    type: DataTypes.ENUM('excellent', 'good', 'average', 'poor'),
-    allowNull: false
+    type: String,
+    enum: ['excellent', 'good', 'average', 'poor'],
+    required: true
   },
-  porterRating: {
-    type: DataTypes.INTEGER,
-    validate: {
-      min: 1,
-      max: 5
-    }
-  },
-  porterId: {
-    type: DataTypes.STRING
-  },
-  porterName: {
-    type: DataTypes.STRING
-  },
-  isApproved: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  isDisplayed: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  helpful: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  }
+  porterRating: { type: Number, min: 1, max: 5 },
+  porterId: String,
+  porterName: String,
+  isApproved: { type: Boolean, default: false },
+  isDisplayed: { type: Boolean, default: false },
+  helpful: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now }
 }, {
-  timestamps: true,
-  tableName: 'reviews'
+  timestamps: true
 });
 
-// Notification Model
-const Notification = sequelize.define('Notification', {
-  recipientId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    index: true
-  },
-  recipientType: {
-    type: DataTypes.ENUM('passenger', 'porter', 'admin'),
-    allowNull: false
-  },
+const Review = mongoose.model('Review', reviewSchema);
+
+// Notification Schema
+const notificationSchema = new mongoose.Schema({
+  recipientId: { type: String, required: true, index: true },
+  recipientType: { type: String, enum: ['passenger', 'porter', 'admin'], required: true },
   type: {
-    type: DataTypes.ENUM('booking_created', 'booking_accepted', 'booking_declined', 'booking_completed', 'review_request', 'payment_received'),
-    allowNull: false
+    type: String,
+    enum: ['booking_created', 'booking_accepted', 'booking_declined', 'booking_completed', 'review_request', 'payment_received'],
+    required: true
   },
-  title: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  message: {
-    type: DataTypes.TEXT,
-    allowNull: false
-  },
-  bookingId: {
-    type: DataTypes.STRING
-  },
-  isRead: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  isSoundPlayed: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  priority: {
-    type: DataTypes.ENUM('low', 'medium', 'high'),
-    defaultValue: 'medium'
-  },
-  metadata: {
-    type: DataTypes.JSONB,
-    defaultValue: {}
-  }
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  bookingId: String,
+  isRead: { type: Boolean, default: false },
+  isSoundPlayed: { type: Boolean, default: false },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+  metadata: mongoose.Schema.Types.Mixed,
+  createdAt: { type: Date, default: Date.now, expires: 2592000 }
 }, {
-  timestamps: true,
-  tableName: 'notifications'
+  timestamps: true
 });
+
+const Notification = mongoose.model('Notification', notificationSchema);
 
 // ==================== HELPER FUNCTIONS ====================
 
 async function createNotification(data) {
   try {
-    const notification = await Notification.create(data);
+    const notification = new Notification(data);
+    await notification.save();
     console.log('🔔 Notification created:', notification.type);
     return notification;
   } catch (error) {
@@ -356,23 +196,21 @@ async function createNotification(data) {
 // ==================== BASIC ROUTES ====================
 
 // Health Check
-app.get('/api/health', async (req, res) => {
-  try {
-    await sequelize.authenticate();
-    res.json({ 
-      status: 'OK',
-      message: 'CooliMate Backend is running!',
-      database: 'connected',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.json({ 
-      status: 'Degraded',
-      message: 'CooliMate Backend is running!',
-      database: 'disconnected',
-      timestamp: new Date().toISOString()
-    });
-  }
+app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const statusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.json({ 
+    status: dbStatus === 1 ? 'OK' : 'Degraded', 
+    message: 'CooliMate Backend is running!',
+    database: statusMap[dbStatus],
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ==================== BOOKING ROUTES ====================
@@ -393,7 +231,8 @@ app.post('/api/bookings', async (req, res) => {
       bookingData.id = `BK${Date.now()}`;
     }
 
-    const booking = await Booking.create(bookingData);
+    const booking = new Booking(bookingData);
+    await booking.save();
 
     // Create notification for porter
     await createNotification({
@@ -416,7 +255,7 @@ app.post('/api/bookings', async (req, res) => {
   } catch (error) {
     console.error('❌ Error creating booking:', error);
     
-    if (error.name === 'SequelizeUniqueConstraintError') {
+    if (error.code === 11000) {
       return res.status(409).json({ 
         error: 'Booking ID already exists',
         message: 'Please try again'
@@ -436,19 +275,18 @@ app.get('/api/bookings/porter/:porterId', async (req, res) => {
     const { porterId } = req.params;
     const { status } = req.query;
 
-    const where = { 
+    const query = { 
       porterId,
-      status: { [Op.ne]: 'declined' }
+      status: { $ne: 'declined' }
     };
 
     if (status) {
-      where.status = status;
+      query.status = status;
     }
 
-    const bookings = await Booking.findAll({
-      where,
-      order: [['requestedAt', 'DESC']]
-    });
+    const bookings = await Booking.find(query)
+      .sort({ requestedAt: -1 })
+      .maxTimeMS(20000);
 
     console.log(`📦 Fetched ${bookings.length} bookings for porter ${porterId}`);
 
@@ -471,7 +309,8 @@ app.get('/api/bookings/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
     
-    const booking = await Booking.findOne({ where: { id: bookingId } });
+    const booking = await Booking.findOne({ id: bookingId })
+      .maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
@@ -498,20 +337,20 @@ app.patch('/api/bookings/:bookingId/accept', async (req, res) => {
   try {
     const { bookingId } = req.params;
 
-    const booking = await Booking.findOne({ 
-      where: { id: bookingId, status: 'pending' } 
-    });
+    const booking = await Booking.findOneAndUpdate(
+      { id: bookingId, status: 'pending' },
+      { 
+        status: 'accepted',
+        acceptedAt: new Date()
+      },
+      { new: true }
+    ).maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
         error: 'Booking not found or already processed'
       });
     }
-
-    await booking.update({ 
-      status: 'accepted',
-      acceptedAt: new Date()
-    });
 
     // Create notification for passenger
     await createNotification({
@@ -545,20 +384,20 @@ app.patch('/api/bookings/:bookingId/complete', async (req, res) => {
   try {
     const { bookingId } = req.params;
 
-    const booking = await Booking.findOne({ 
-      where: { id: bookingId, status: 'accepted' } 
-    });
+    const booking = await Booking.findOneAndUpdate(
+      { id: bookingId, status: 'accepted' },
+      { 
+        status: 'completed',
+        completedAt: new Date()
+      },
+      { new: true }
+    ).maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
         error: 'Booking not found or not in accepted state'
       });
     }
-
-    await booking.update({ 
-      status: 'completed',
-      completedAt: new Date()
-    });
 
     // Create notification for passenger with review request
     await createNotification({
@@ -592,20 +431,20 @@ app.patch('/api/bookings/:bookingId/decline', async (req, res) => {
   try {
     const { bookingId } = req.params;
 
-    const booking = await Booking.findOne({ 
-      where: { id: bookingId, status: 'pending' } 
-    });
+    const booking = await Booking.findOneAndUpdate(
+      { id: bookingId, status: 'pending' },
+      { 
+        status: 'declined',
+        declinedAt: new Date()
+      },
+      { new: true }
+    ).maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
         error: 'Booking not found or already processed'
       });
     }
-
-    await booking.update({ 
-      status: 'declined',
-      declinedAt: new Date()
-    });
 
     // Create notification for passenger
     await createNotification({
@@ -639,16 +478,20 @@ app.get('/api/porter/:porterId/stats', async (req, res) => {
   try {
     const { porterId } = req.params;
 
-    const stats = await Booking.findAll({
-      where: { porterId },
-      attributes: [
-        'status',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
-        [sequelize.fn('SUM', sequelize.literal("CASE WHEN status = 'completed' THEN \"totalPrice\" ELSE 0 END")), 'totalEarnings']
-      ],
-      group: ['status'],
-      raw: true
-    });
+    const stats = await Booking.aggregate([
+      { $match: { porterId } },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalEarnings: { 
+            $sum: { 
+              $cond: [{ $eq: ['$status', 'completed'] }, '$totalPrice', 0] 
+            }
+          }
+        }
+      }
+    ]).maxTimeMS(15000);
 
     const formattedStats = {
       pending: 0,
@@ -658,9 +501,9 @@ app.get('/api/porter/:porterId/stats', async (req, res) => {
     };
 
     stats.forEach(stat => {
-      formattedStats[stat.status] = parseInt(stat.count);
-      if (stat.status === 'completed') {
-        formattedStats.totalEarnings = parseFloat(stat.totalEarnings) || 0;
+      formattedStats[stat._id] = stat.count;
+      if (stat._id === 'completed') {
+        formattedStats.totalEarnings = stat.totalEarnings;
       }
     });
 
@@ -683,15 +526,14 @@ app.delete('/api/bookings/:bookingId', async (req, res) => {
   try {
     const { bookingId } = req.params;
 
-    const booking = await Booking.findOne({ where: { id: bookingId } });
+    const booking = await Booking.findOneAndDelete({ id: bookingId })
+      .maxTimeMS(10000);
 
     if (!booking) {
       return res.status(404).json({ 
         error: 'Booking not found'
       });
     }
-
-    await booking.destroy();
 
     console.log('🗑️ Booking deleted:', bookingId);
 
@@ -717,22 +559,17 @@ app.post('/api/analytics/visit', async (req, res) => {
     const { sessionId, userAgent, page, device, browser, os } = req.body;
     const ipAddress = req.ip || req.headers['x-forwarded-for'];
 
-    let visit = await Visit.findOne({ where: { sessionId } });
+    let visit = await Visit.findOne({ sessionId });
 
     if (visit) {
-      const pages = visit.pages || [];
-      pages.push({
+      visit.lastVisit = new Date();
+      visit.totalVisits += 1;
+      visit.pages.push({
         path: page,
         timestamp: new Date()
       });
-      
-      await visit.update({
-        lastVisit: new Date(),
-        totalVisits: visit.totalVisits + 1,
-        pages: pages
-      });
     } else {
-      visit = await Visit.create({
+      visit = new Visit({
         sessionId,
         userAgent,
         ipAddress,
@@ -745,6 +582,8 @@ app.post('/api/analytics/visit', async (req, res) => {
         }]
       });
     }
+
+    await visit.save();
 
     res.json({
       success: true,
@@ -762,14 +601,14 @@ app.patch('/api/analytics/visit/:sessionId/booking', async (req, res) => {
     const { sessionId } = req.params;
     const { bookingId } = req.body;
 
-    const visit = await Visit.findOne({ where: { sessionId } });
-    
-    if (visit) {
-      await visit.update({ 
+    const visit = await Visit.findOneAndUpdate(
+      { sessionId },
+      { 
         isBookingCompleted: true,
         bookingId: bookingId
-      });
-    }
+      },
+      { new: true }
+    );
 
     res.json({
       success: true,
@@ -789,60 +628,60 @@ app.get('/api/analytics/dashboard', async (req, res) => {
     const dateFilter = {};
     if (startDate && endDate) {
       dateFilter.createdAt = {
-        [Op.between]: [new Date(startDate), new Date(endDate)]
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
       };
     }
 
-    const totalVisits = await Visit.count({ where: dateFilter });
-    const uniqueVisitors = await Visit.count({ 
-      where: { ...dateFilter, totalVisits: 1 } 
+    const totalVisits = await Visit.countDocuments(dateFilter);
+    const uniqueVisitors = await Visit.countDocuments({ 
+      ...dateFilter,
+      totalVisits: 1 
     });
-    const totalBookings = await Booking.count({ where: dateFilter });
+    const totalBookings = await Booking.countDocuments(dateFilter);
     const conversionRate = totalVisits > 0 
       ? ((totalBookings / totalVisits) * 100).toFixed(2)
       : 0;
 
-    const bookingsByStatus = await Booking.findAll({
-      where: dateFilter,
-      attributes: [
-        'status',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
-        [sequelize.fn('SUM', sequelize.col('totalPrice')), 'totalRevenue']
-      ],
-      group: ['status'],
-      raw: true
-    });
+    const bookingsByStatus = await Booking.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalRevenue: { $sum: '$totalPrice' }
+        }
+      }
+    ]);
 
-    const deviceStats = await Visit.findAll({
-      where: dateFilter,
-      attributes: [
-        'device',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-      ],
-      group: ['device'],
-      raw: true
-    });
+    const deviceStats = await Visit.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: '$device',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
 
-    const recentBookings = await Booking.findAll({
-      where: dateFilter,
-      order: [['requestedAt', 'DESC']],
-      limit: 10,
-      attributes: ['id', 'passengerName', 'phone', 'station', 'trainNo', 'status', 'totalPrice', 'requestedAt']
-    });
+    const recentBookings = await Booking.find(dateFilter)
+      .sort({ requestedAt: -1 })
+      .limit(10)
+      .select('id passengerName phone station trainNo status totalPrice requestedAt');
 
-    const topPorters = await Review.findAll({
-      where: { isApproved: true },
-      attributes: [
-        'porterId',
-        'porterName',
-        [sequelize.fn('AVG', sequelize.col('porterRating')), 'avgRating'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'totalReviews']
-      ],
-      group: ['porterId', 'porterName'],
-      order: [[sequelize.literal('avgRating'), 'DESC']],
-      limit: 5,
-      raw: true
-    });
+    const topPorters = await Review.aggregate([
+      { $match: { isApproved: true } },
+      {
+        $group: {
+          _id: '$porterId',
+          porterName: { $first: '$porterName' },
+          avgRating: { $avg: '$porterRating' },
+          totalReviews: { $sum: 1 }
+        }
+      },
+      { $sort: { avgRating: -1 } },
+      { $limit: 5 }
+    ]);
 
     res.json({
       success: true,
@@ -852,14 +691,14 @@ app.get('/api/analytics/dashboard', async (req, res) => {
           uniqueVisitors,
           totalBookings,
           conversionRate: `${conversionRate}%`,
-          totalRevenue: bookingsByStatus.reduce((sum, b) => sum + (parseFloat(b.totalRevenue) || 0), 0)
+          totalRevenue: bookingsByStatus.reduce((sum, b) => sum + b.totalRevenue, 0)
         },
         bookingsByStatus: bookingsByStatus.reduce((acc, item) => {
-          acc[item.status] = parseInt(item.count);
+          acc[item._id] = item.count;
           return acc;
         }, {}),
         deviceStats: deviceStats.reduce((acc, item) => {
-          acc[item.device || 'unknown'] = parseInt(item.count);
+          acc[item._id || 'unknown'] = item.count;
           return acc;
         }, {}),
         recentBookings,
@@ -880,18 +719,17 @@ app.get('/api/notifications/:recipientId', async (req, res) => {
     const { recipientId } = req.params;
     const { type, unreadOnly } = req.query;
 
-    const where = { recipientId };
-    if (type) where.recipientType = type;
-    if (unreadOnly === 'true') where.isRead = false;
+    const query = { recipientId };
+    if (type) query.recipientType = type;
+    if (unreadOnly === 'true') query.isRead = false;
 
-    const notifications = await Notification.findAll({
-      where,
-      order: [['createdAt', 'DESC']],
-      limit: 50
-    });
+    const notifications = await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .limit(50);
 
-    const unreadCount = await Notification.count({
-      where: { recipientId, isRead: false }
+    const unreadCount = await Notification.countDocuments({
+      recipientId,
+      isRead: false
     });
 
     res.json({
@@ -911,11 +749,11 @@ app.patch('/api/notifications/:notificationId/read', async (req, res) => {
   try {
     const { notificationId } = req.params;
 
-    const notification = await Notification.findByPk(notificationId);
-    
-    if (notification) {
-      await notification.update({ isRead: true, isSoundPlayed: true });
-    }
+    const notification = await Notification.findByIdAndUpdate(
+      notificationId,
+      { isRead: true, isSoundPlayed: true },
+      { new: true }
+    );
 
     res.json({
       success: true,
@@ -932,9 +770,9 @@ app.patch('/api/notifications/:recipientId/read-all', async (req, res) => {
   try {
     const { recipientId } = req.params;
 
-    await Notification.update(
-      { isRead: true, isSoundPlayed: true },
-      { where: { recipientId, isRead: false } }
+    await Notification.updateMany(
+      { recipientId, isRead: false },
+      { isRead: true, isSoundPlayed: true }
     );
 
     res.json({
@@ -955,10 +793,8 @@ app.post('/api/reviews', async (req, res) => {
     const reviewData = req.body;
 
     const booking = await Booking.findOne({ 
-      where: { 
-        id: reviewData.bookingId,
-        status: 'completed'
-      }
+      id: reviewData.bookingId,
+      status: 'completed'
     });
 
     if (!booking) {
@@ -968,7 +804,7 @@ app.post('/api/reviews', async (req, res) => {
     }
 
     const existingReview = await Review.findOne({ 
-      where: { bookingId: reviewData.bookingId }
+      bookingId: reviewData.bookingId 
     });
 
     if (existingReview) {
@@ -983,9 +819,10 @@ app.post('/api/reviews', async (req, res) => {
       reviewData.isDisplayed = true;
     }
 
-    const review = await Review.create(reviewData);
+    const review = new Review(reviewData);
+    await review.save();
 
-    console.log('⭐ Review created:', review.id);
+    console.log('⭐ Review created:', review._id);
 
     res.status(201).json({
       success: true,
@@ -1001,30 +838,30 @@ app.post('/api/reviews', async (req, res) => {
 // Get reviews for homepage (approved and high-rated only)
 app.get('/api/reviews/public', async (req, res) => {
   try {
-    const reviews = await Review.findAll({
-      where: {
-        isApproved: true,
-        isDisplayed: true,
-        rating: { [Op.gte]: 4 }
-      },
-      order: [['createdAt', 'DESC']],
-      limit: 10,
-      attributes: ['userName', 'rating', 'comment', 'experience', 'createdAt', 'porterName']
-    });
+    const reviews = await Review.find({
+      isApproved: true,
+      isDisplayed: true,
+      rating: { $gte: 4 }
+    })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select('userName rating comment experience createdAt porterName');
 
-    const avgRatingData = await Review.findOne({
-      where: { isApproved: true },
-      attributes: [
-        [sequelize.fn('AVG', sequelize.col('rating')), 'avgRating'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'totalReviews']
-      ],
-      raw: true
-    });
+    const avgRating = await Review.aggregate([
+      { $match: { isApproved: true } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 }
+        }
+      }
+    ]);
 
     res.json({
       success: true,
       reviews,
-      stats: avgRatingData || { avgRating: 0, totalReviews: 0 }
+      stats: avgRating[0] || { avgRating: 0, totalReviews: 0 }
     });
   } catch (error) {
     console.error('❌ Error fetching reviews:', error);
@@ -1037,16 +874,14 @@ app.get('/api/reviews/admin', async (req, res) => {
   try {
     const { status, minRating } = req.query;
 
-    const where = {};
-    if (status === 'pending') where.isApproved = false;
-    if (status === 'approved') where.isApproved = true;
-    if (minRating) where.rating = { [Op.gte]: parseInt(minRating) };
+    const query = {};
+    if (status === 'pending') query.isApproved = false;
+    if (status === 'approved') query.isApproved = true;
+    if (minRating) query.rating = { $gte: parseInt(minRating) };
 
-    const reviews = await Review.findAll({
-      where,
-      order: [['createdAt', 'DESC']],
-      limit: 100
-    });
+    const reviews = await Review.find(query)
+      .sort({ createdAt: -1 })
+      .limit(100);
 
     res.json({
       success: true,
@@ -1065,11 +900,11 @@ app.patch('/api/reviews/:reviewId/moderate', async (req, res) => {
     const { reviewId } = req.params;
     const { isApproved, isDisplayed } = req.body;
 
-    const review = await Review.findByPk(reviewId);
-    
-    if (review) {
-      await review.update({ isApproved, isDisplayed });
-    }
+    const review = await Review.findByIdAndUpdate(
+      reviewId,
+      { isApproved, isDisplayed },
+      { new: true }
+    );
 
     res.json({
       success: true,
@@ -1103,10 +938,10 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 CooliMate Backend running on port ${PORT}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api`);
-  console.log(`⏳ PostgreSQL connection status: Checking...`);
-  console.log(`\n📊 Available Features:`);
+  console.log(`⏳ MongoDB connection status: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Connecting...'}`);
+  console.log(`\n📊 New Features:`);
   console.log(`   - Analytics Dashboard: GET /api/analytics/dashboard`);
   console.log(`   - Notifications: GET /api/notifications/:recipientId`);
   console.log(`   - Reviews: GET /api/reviews/public`);
