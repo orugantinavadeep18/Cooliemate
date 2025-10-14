@@ -9,10 +9,19 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
+// Middleware - UPDATED CORS CONFIGURATION
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://cooliemate-etak.vercel.app',
+    'https://www.cooliemate.in',
+    'https://cooliemate.in'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -498,6 +507,42 @@ app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Update Status Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+});
+
+// NEW: Get notifications for porter
+app.get('/api/notifications/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+
+    if (type === 'porter') {
+      // Get pending bookings for this porter
+      const notifications = await Booking.find({
+        porterId: id,
+        status: 'pending'
+      }).sort({ createdAt: -1 });
+
+      res.json({
+        success: true,
+        count: notifications.length,
+        data: notifications
+      });
+    } else {
+      res.json({
+        success: true,
+        count: 0,
+        data: []
+      });
+    }
+
+  } catch (error) {
+    console.error('Fetch Notifications Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
