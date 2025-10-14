@@ -10,7 +10,7 @@ import { trackPageVisit } from "@/utils/analytics";
 import Home from "./pages/Home";
 import BookPorter from "./pages/BookPorter";
 import PorterLogin from "./pages/PorterLogin";
-import PorterRegistration from './pages/porterregistration';
+// import PorterRegistration from './pages/porterregistration';
 import AdminLogin from "./pages/AdminLogin";
 import PorterDashboard from "./pages/PorterDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -44,7 +44,7 @@ const AppRoutes = () => {
       
       {/* Authentication Routes */}
       <Route path="/porter-login" element={<PorterLogin />} />
-      <Route path="/porter-registration" element={<PorterRegistration/>} />
+      {/* <Route path="/porter-registration" element={<PorterRegistration/>} /> */}
       <Route path="/admin-login" element={<AdminLogin />} />
       
       {/* Dashboard Routes */}
