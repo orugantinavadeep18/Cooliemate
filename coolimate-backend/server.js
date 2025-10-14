@@ -4,10 +4,18 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('✅ Created uploads directory');
+}
 
 // Middleware - UPDATED CORS CONFIGURATION
 app.use(cors({
@@ -269,6 +277,8 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   try {
     const { name, phone, badgeNumber, station, password } = req.body;
 
+    console.log('📝 Registration attempt:', { name, phone, badgeNumber, station });
+
     if (!name || !phone || !badgeNumber || !station || !password) {
       return res.status(400).json({
         success: false,
@@ -283,11 +293,18 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
       });
     }
 
+    console.log('📷 Image uploaded:', req.file.filename);
+
     const existingPorter = await Porter.findOne({
       $or: [{ phone }, { badgeNumber }]
     });
 
     if (existingPorter) {
+      // Delete uploaded file if porter already exists
+      const filePath = path.join(__dirname, 'uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       return res.status(400).json({
         success: false,
         message: 'Porter with this phone number or badge number already exists'
@@ -304,6 +321,7 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
     });
 
     await porter.save();
+    console.log('✅ Porter saved to database');
 
     const token = jwt.sign(
       { id: porter._id, badgeNumber: porter.badgeNumber },
@@ -327,7 +345,16 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration Error:', error);
+    console.error('❌ Registration Error:', error);
+    
+    // Delete uploaded file if there's an error
+    if (req.file) {
+      const filePath = path.join(__dirname, 'uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Server error during registration',
@@ -521,17 +548,21 @@ app.get('/api/notifications/:id', async (req, res) => {
     const { id } = req.params;
     const { type } = req.query;
 
+    console.log(`📬 Fetching notifications for ${type}: ${id}`);
+
     if (type === 'porter') {
       // Get pending bookings for this porter
       const notifications = await Booking.find({
         porterId: id,
         status: 'pending'
-      }).sort({ createdAt: -1 });
+      }).sort({ createdAt: -1 }).limit(50);
+
+      console.log(`✅ Found ${notifications.length} notifications`);
 
       res.json({
         success: true,
         count: notifications.length,
-        data: notifications
+        data: notifications || []
       });
     } else {
       res.json({
@@ -542,10 +573,12 @@ app.get('/api/notifications/:id', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Fetch Notifications Error:', error);
-    res.status(500).json({
+    console.error('❌ Fetch Notifications Error:', error);
+    res.status(200).json({
       success: false,
-      message: 'Server error',
+      message: 'Error fetching notifications',
+      count: 0,
+      data: [],
       error: error.message
     });
   }
