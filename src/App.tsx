@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import AvailablePorters from "./pages/Available";
 import AboutUs from "./pages/aboutus";
+import PorterRegistration from './pages/porterregistration';
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/porter-dashboard" element={<PorterDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/porter-registration" element={<PorterRegistration/>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
            <Route path="/available" element={<AvailablePorters/>} />
           <Route path="*" element={<NotFound />} />
