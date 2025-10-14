@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
-
+import Footer from "../pages/Footer";
 const PorterLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -15,7 +15,7 @@ const PorterLogin = () => {
     password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     // Demo credentials: Test porter / test123
@@ -77,7 +77,9 @@ const PorterLogin = () => {
             </form>
           </CardContent>
         </Card>
+        
       </div>
+      <Footer/>
     </div>
   );
 };
