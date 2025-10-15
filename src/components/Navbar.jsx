@@ -81,7 +81,7 @@ const Navbar = () => {
       </nav>
 
       {/* Mobile Footer Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+      <div className="md:hidde fixed bottom-0 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
         <div className="flex items-center justify-around px-2 py-2">
           {navLinks.map((link) => {
             const Icon = link.icon;
@@ -95,7 +95,7 @@ const Navbar = () => {
               >
                 <Icon 
                   size={22} 
-                  className={`${isActive ? 'text-[#e63946]' : 'text-gray-600'}`}
+                  className={`${isActive ? 'text-[#e63946]' : 'text-black'}`}
                 />
                 <span 
                   className={`text-xs mt-1 ${isActive ? 'text-[#e63946] font-semibold' : 'text-gray-600'}`}
