@@ -18,11 +18,7 @@ const Footer = () => {
             <p className="text-black leading-relaxed text-sm sm:text-base drop-shadow-sm">
               Empowering porters, helping passengers — simplifying travel one bag at a time.
             </p>
-            <div className="flex gap-4 mt-4">
-              <a href="https://www.linkedin.com/company/coolimate" target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-800 rounded-full text-black hover:text-yellow-400 hover:bg-gray-700 transition-all transform hover:scale-110 shadow-lg">
-                <Linkedin size={20} />
-              </a>
-            </div>
+            
           </div>
 
           {/* Middle: Navigation Links */}
@@ -79,7 +75,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="text-center text-xs text-black space-y-1">
           <p>
-            © 2025 <span className="text-black font-semibold">CooliMate</span>. Empowering porters, helping passengers.
+            © 2025 <span className="text-black font-semibold">CoolieMate</span>. Empowering porters, helping passengers.
           </p>
           <p>
             Part of the <span className="text-black font-medium">Digital India Initiative</span>

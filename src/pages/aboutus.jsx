@@ -27,7 +27,7 @@ const AboutUs = () => {
       role: "Founder & CEO",
       img: "/founder.jpg",
       description:
-        "Visionary leader who identified the gap in railway luggage assistance and conceptualized CooliMate as a solution to a nationwide problem.",
+        "Visionary leader who identified the gap in railway luggage assistance and conceptualized CoolieMate as a solution to a nationwide problem.",
     },
     {
       name: "Sahithya",
@@ -48,7 +48,7 @@ const AboutUs = () => {
       role: "Co-Founder & Growth Lead",
       img: "/cofounder3.jpg",
       description:
-        "Growth and partnerships expert, building bridges with railway authorities, porter unions, and stakeholders to scale CooliMate across India.",
+        "Growth and partnerships expert, building bridges with railway authorities, porter unions, and stakeholders to scale CoolieMate across India.",
     },
   ];
 
@@ -95,7 +95,7 @@ const AboutUs = () => {
     {
       title: "Real-time Tracking",
       description:
-        "Track your porter’s location in real-time, just like ride-hailing apps.",
+        "Track your porter's location in real-time, just like ride-hailing apps.",
       icon: Globe,
     },
     {
@@ -126,7 +126,7 @@ const AboutUs = () => {
     {
       title: "Digital India Support",
       description:
-        "Bringing traditional porter services into the digital ecosystem to support India’s transformation.",
+        "Bringing traditional porter services into the digital ecosystem to support India's transformation.",
       icon: Globe,
       color: "text-green-600",
       bg: "bg-green-50",
@@ -150,16 +150,16 @@ const AboutUs = () => {
         <div className="container mx-auto px-4 text-center">
           <Badge className="mb-4 text-sm px-4 py-1">
             <Sparkles className="w-3 h-3 mr-1" />
-            Passionate Inovators
+            Passionate Innovators
           </Badge>
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            About CooliMate
+            About CoolieMate
           </h1>
           <p className="text-xl text-muted-foreground mb-6">
             Luggage Help at Your Fingertips
           </p>
           <p className="text-lg leading-relaxed text-muted-foreground max-w-3xl mx-auto">
-            We are a team of passionate innovators from
+            We are a team of passionate innovators
             driven by the mission to make railway travel more comfortable and
             accessible for everyone through smart, digital porter booking.
           </p>
@@ -188,7 +188,7 @@ const AboutUs = () => {
               assistance across India.
             </p>
             <p>
-              We envisioned <span className="text-primary font-semibold">CooliMate</span> as a way to
+              We envisioned <span className="text-primary font-semibold">CoolieMate</span> as a way to
               connect passengers and porters seamlessly — empowering both with
               technology, transparency, and trust.
             </p>
@@ -201,7 +201,7 @@ const AboutUs = () => {
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold mb-3">Meet Our Team</h2>
           <p className="text-lg text-muted-foreground">
-            The innovators behind CooliMate
+            The innovators behind CoolieMate
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
@@ -234,7 +234,7 @@ const AboutUs = () => {
         {/* Problem Statement */}
         <section>
           <h2 className="text-4xl font-bold text-center mb-10">
-            The Problem We’re Solving
+            The Problem We're Solving
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
             {problems.map((item, i) => {

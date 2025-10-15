@@ -34,7 +34,7 @@ const Home = () => {
           backgroundImage: `url('/img1.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.9)', // makes the image lighter for better readability
+          filter: 'brightness(0.9)',
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-transparent" />
@@ -86,7 +86,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              Why Choose CooliMate?
+              Why Choose CoolieMate?
             </motion.h2>
             <motion.p
               className="text-muted-foreground text-lg max-w-2xl mx-auto"
@@ -95,7 +95,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              The luggage will always be heavy, but with CooliMate, the journey won’t be.
+              The luggage will always be heavy, but with CoolieMate, the journey won't be.
             </motion.p>
             <motion.p
               className="text-muted-foreground text-lg max-w-2xl mx-auto"
@@ -104,7 +104,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              We created CooliMate to bring comfort, dignity, and convenience to every traveler...
+              We created CoolieMate to bring comfort, dignity, and convenience to every traveler...
             </motion.p>
           </div>
 
@@ -269,7 +269,6 @@ const Home = () => {
       </section>
 
       <Footer />
-      {/* <HomepageReviews /> */}
     </div>
   );
 };

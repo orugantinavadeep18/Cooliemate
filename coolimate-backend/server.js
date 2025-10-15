@@ -117,12 +117,13 @@ const porterSchema = new mongoose.Schema({
   }
 });
 
-// Booking Schema
+// Booking Schema - UPDATED with porterBadgeNumber
 const bookingSchema = new mongoose.Schema({
   porterId: {
     type: String,
     required: true
   },
+  porterBadgeNumber: String, // ADDED: For reference
   porterName: {
     type: String,
     required: true
@@ -272,6 +273,34 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// ADDED: Debug endpoint to check porter online status
+app.get('/api/porters/debug', async (req, res) => {
+  try {
+    const allPorters = await Porter.find({})
+      .select('name badgeNumber station isOnline isVerified lastSeen')
+      .lean();
+    
+    const onlinePorters = allPorters.filter(p => p.isOnline);
+    
+    res.json({
+      success: true,
+      total: allPorters.length,
+      online: onlinePorters.length,
+      offline: allPorters.length - onlinePorters.length,
+      porters: allPorters.map(p => ({
+        name: p.name,
+        badgeNumber: p.badgeNumber,
+        station: p.station,
+        isOnline: p.isOnline,
+        isVerified: p.isVerified,
+        lastSeen: p.lastSeen
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Register Porter
 app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   try {
@@ -363,10 +392,12 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   }
 });
 
-// Login Porter
+// Login Porter - UPDATED with better logging
 app.post('/api/porter/login', async (req, res) => {
   try {
     const { badgeNumber, password } = req.body;
+
+    console.log('🔐 Login attempt for badge:', badgeNumber);
 
     if (!badgeNumber || !password) {
       return res.status(400).json({
@@ -377,6 +408,7 @@ app.post('/api/porter/login', async (req, res) => {
 
     const porter = await Porter.findOne({ badgeNumber });
     if (!porter) {
+      console.log('❌ Porter not found');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -385,6 +417,7 @@ app.post('/api/porter/login', async (req, res) => {
 
     const isMatch = await porter.comparePassword(password);
     if (!isMatch) {
+      console.log('❌ Password mismatch');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -397,9 +430,13 @@ app.post('/api/porter/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    // CRITICAL: Set isOnline to true
     porter.isOnline = true;
     porter.lastSeen = Date.now();
     await porter.save();
+
+    console.log(`✅ Login successful - Porter ${porter.name} is now ONLINE at ${porter.station}`);
+    console.log(`   Badge: ${porter.badgeNumber}, isOnline: ${porter.isOnline}`);
 
     res.json({
       success: true,
@@ -422,7 +459,7 @@ app.post('/api/porter/login', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login Error:', error);
+    console.error('❌ Login Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during login',
@@ -458,26 +495,35 @@ app.get('/api/porter/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Get available (online) porters for booking
+// Get available (online) porters for booking - UPDATED with better logging and case-insensitive station
 app.get('/api/porters/available', async (req, res) => {
   try {
     const { station } = req.query;
     
     let query = { isOnline: true, isVerified: true };
     if (station) {
-      query.station = station;
+      // Case-insensitive station search
+      query.station = { $regex: new RegExp(`^${station}$`, 'i') };
     }
+
+    console.log('🔍 Searching for porters with query:', JSON.stringify(query));
 
     const porters = await Porter.find(query)
       .select('-password')
       .sort({ rating: -1, totalTrips: -1 });
 
+    console.log(`✅ Found ${porters.length} online porters at ${station || 'all stations'}`);
+    if (porters.length > 0) {
+      console.log('   Porter names:', porters.map(p => p.name).join(', '));
+    }
+
     res.json({
       success: true,
       count: porters.length,
       data: porters.map(porter => ({
-        id: porter.badgeNumber,
-        _id: porter._id,
+        id: porter.badgeNumber, // Use badgeNumber as main ID
+        _id: porter._id.toString(), // MongoDB ID
+        mongoId: porter._id.toString(), // Explicit MongoDB ID
         name: porter.name,
         photo: `${req.protocol}://${req.get('host')}/uploads/${porter.image}`,
         station: porter.station,
@@ -495,10 +541,12 @@ app.get('/api/porters/available', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Fetch Available Porters Error:', error);
+    console.error('❌ Fetch Available Porters Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
+      count: 0,
+      data: [],
       error: error.message
     });
   }
@@ -523,6 +571,8 @@ app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
     porter.lastSeen = Date.now();
     await porter.save();
 
+    console.log(`📡 Porter ${porter.name} status updated to ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+
     res.json({
       success: true,
       message: `Porter status updated to ${isOnline ? 'online' : 'offline'}`,
@@ -542,7 +592,7 @@ app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// NEW: Get notifications for porter
+// Get notifications for porter - UPDATED to use MongoDB _id
 app.get('/api/notifications/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -551,13 +601,30 @@ app.get('/api/notifications/:id', async (req, res) => {
     console.log(`📬 Fetching notifications for ${type}: ${id}`);
 
     if (type === 'porter') {
-      // Get pending bookings for this porter
+      // Try to find porter by either MongoDB _id or badgeNumber
+      const porter = await Porter.findOne({
+        $or: [
+          { _id: id },
+          { badgeNumber: id }
+        ]
+      });
+
+      if (!porter) {
+        console.log('⚠️ Porter not found for notifications');
+        return res.json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+
+      // Get pending bookings using MongoDB _id
       const notifications = await Booking.find({
-        porterId: id,
+        porterId: porter._id.toString(),
         status: 'pending'
       }).sort({ createdAt: -1 }).limit(50);
 
-      console.log(`✅ Found ${notifications.length} notifications`);
+      console.log(`✅ Found ${notifications.length} notifications for ${porter.name}`);
 
       res.json({
         success: true,
@@ -584,25 +651,57 @@ app.get('/api/notifications/:id', async (req, res) => {
   }
 });
 
-// Create Booking
+// Create Booking - UPDATED to validate porter and use MongoDB _id
 app.post('/api/bookings', async (req, res) => {
   try {
     const bookingData = req.body;
     
+    console.log('📝 Creating booking with data:', bookingData);
+
+    // Validate porter exists and is online
+    const porter = await Porter.findOne({ 
+      $or: [
+        { badgeNumber: bookingData.porterId },
+        { _id: bookingData.porterId }
+      ]
+    });
+
+    if (!porter) {
+      console.log('❌ Porter not found:', bookingData.porterId);
+      return res.status(404).json({
+        success: false,
+        message: 'Porter not found'
+      });
+    }
+
+    if (!porter.isOnline) {
+      console.log('❌ Porter is offline:', porter.name);
+      return res.status(400).json({
+        success: false,
+        message: 'Porter is currently offline'
+      });
+    }
+
+    // Store MongoDB _id in porterId field for consistency
+    bookingData.porterId = porter._id.toString();
+    bookingData.porterBadgeNumber = porter.badgeNumber;
+    
     const booking = new Booking(bookingData);
     await booking.save();
+
+    console.log(`✅ Booking created: ${booking._id} for porter ${porter.name}`);
 
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
       booking: {
-        id: booking._id,
+        id: booking._id.toString(),
         ...booking.toObject()
       }
     });
 
   } catch (error) {
-    console.error('Create Booking Error:', error);
+    console.error('❌ Create Booking Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -638,13 +737,28 @@ app.get('/api/bookings/:id', async (req, res) => {
   }
 });
 
-// Get porter's bookings
+// Get porter's bookings - UPDATED to handle both _id and badgeNumber
 app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) => {
   try {
     const { porterId } = req.params;
     const { status } = req.query;
 
-    let query = { porterId };
+    // Find porter to get MongoDB _id
+    const porter = await Porter.findOne({
+      $or: [
+        { _id: porterId },
+        { badgeNumber: porterId }
+      ]
+    });
+
+    if (!porter) {
+      return res.status(404).json({
+        success: false,
+        message: 'Porter not found'
+      });
+    }
+
+    let query = { porterId: porter._id.toString() };
     if (status) {
       query.status = status;
     }
@@ -667,7 +781,7 @@ app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) =>
   }
 });
 
-// Accept/Decline Booking
+// Accept/Decline Booking - UPDATED to handle MongoDB _id
 app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -693,12 +807,15 @@ app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
     booking.updatedAt = Date.now();
     await booking.save();
 
+    console.log(`📋 Booking ${id} status updated to ${status}`);
+
     // Update porter's total trips if completed
     if (status === 'completed') {
-      const porter = await Porter.findOne({ badgeNumber: booking.porterId });
+      const porter = await Porter.findById(booking.porterId);
       if (porter) {
         porter.totalTrips += 1;
         await porter.save();
+        console.log(`✅ Porter ${porter.name} total trips: ${porter.totalTrips}`);
       }
     }
 
@@ -718,7 +835,7 @@ app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// Submit Review
+// Submit Review - UPDATED to handle MongoDB _id
 app.post('/api/reviews', async (req, res) => {
   try {
     const reviewData = req.body;
@@ -726,15 +843,26 @@ app.post('/api/reviews', async (req, res) => {
     const review = new Review(reviewData);
     await review.save();
 
+    console.log(`⭐ Review submitted: ${reviewData.rating} stars for porter ${reviewData.porterName}`);
+
     // Update porter's rating
     if (reviewData.porterId && reviewData.porterRating) {
-      const porter = await Porter.findOne({ badgeNumber: reviewData.porterId });
+      const porter = await Porter.findOne({
+        $or: [
+          { badgeNumber: reviewData.porterId },
+          { _id: reviewData.porterId }
+        ]
+      });
+      
       if (porter) {
         // Calculate new average rating
-        const reviews = await Review.find({ porterId: reviewData.porterId });
+        const reviews = await Review.find({ 
+          porterId: { $in: [porter.badgeNumber, porter._id.toString()] }
+        });
         const totalRating = reviews.reduce((sum, r) => sum + r.porterRating, 0);
         porter.rating = parseFloat((totalRating / reviews.length).toFixed(1));
         await porter.save();
+        console.log(`✅ Porter ${porter.name} new rating: ${porter.rating}`);
       }
     }
 
@@ -767,4 +895,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Debug endpoint: http://localhost:${PORT}/api/porters/debug`);
 });
