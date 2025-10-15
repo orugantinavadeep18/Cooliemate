@@ -64,7 +64,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Top Bar */}
-        <div className="md:hidden flex items-center justify-center px-4 h-16 bg-white border-b border-gray-200 shadow-sm relative">
+        <div className="md:hidden sticky flex items-center justify-center px-4 h-16 bg-white border-b border-gray-200 shadow-sm relative">
           {/* Logo + Title - Centered */}
           <div className="flex items-center space-x-2">
             <img src="/logo.png" alt="CoolieMate Logo" className="h-10 w-10" />
@@ -81,33 +81,32 @@ const Navbar = () => {
       </nav>
 
       {/* Mobile Footer Navigation */}
-<div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-  <div className="flex justify-between px-2 py-2">
-    {navLinks.map((link) => {
-      const Icon = link.icon;
-      const isActive = location.pathname === link.path;
-      
-      return (
-        <Link
-          key={link.path}
-          to={link.path}
-          className="flex flex-col items-center justify-center w-16 truncate"
-        >
-          <Icon 
-            size={22} 
-            className={`${isActive ? 'text-[#e63946]' : 'text-black'}`}
-          />
-          <span 
-            className={`text-xs mt-1 truncate text-center ${isActive ? 'text-[#e63946] font-semibold' : 'text-gray-600'}`}
-          >
-            {link.name}
-          </span>
-        </Link>
-      );
-    })}
-  </div>
-</div>
-
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
+        <div className="flex items-center justify-around px-2 py-2">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            const isActive = location.pathname === link.path;
+            
+            return (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="flex flex-col items-center justify-center flex-1 py-2"
+              >
+                <Icon 
+                  size={22} 
+                  className={`${isActive ? 'text-[#0b0a0a]' : 'text-black'}`}
+                />
+                <span 
+                  className={`text-xs mt-1 ${isActive ? 'text-[#e91532] font-semibold' : 'text-red-500'}`}
+                >
+                  {link.name}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 };
