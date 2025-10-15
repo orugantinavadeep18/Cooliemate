@@ -74,55 +74,52 @@ const AvailablePorters = () => {
     }
   }, []);
 
-  // Fetch available porters from backend
-  useEffect(() => {
-    if (!bookingData) return;
+  // Fetch all available porters from backend
+useEffect(() => {
+  if (!bookingData) return;
 
-    const fetchAvailablePorters = async () => {
-      try {
-        setLoadingPorters(true);
-        const station = bookingData?.travelDetails?.station || '';
-        const url = station 
-          ? `${API_BASE}/api/porters/available?station=${encodeURIComponent(station)}`
-          : `${API_BASE}/api/porters/available`;
-        
-        console.log('🔍 Fetching porters from:', url);
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch porters');
-        }
-
-        const data = await response.json();
-        console.log('📦 Available porters:', data);
-        
-        if (data.success && data.data) {
-          setPorters(data.data);
-          if (data.data.length === 0) {
-            toast({
-              title: "No Porters Available",
-              description: `No porters are currently online at ${station}`,
-            });
-          }
-        } else {
-          setPorters([]);
-        }
-      } catch (error) {
-        console.error('❌ Error fetching porters:', error);
-        toast({
-          title: "Error Loading Porters",
-          description: "Could not load available porters. Please try again.",
-          variant: "destructive",
-        });
-        setPorters([]);
-      } finally {
-        setLoadingPorters(false);
+  const fetchAvailablePorters = async () => {
+    try {
+      setLoadingPorters(true);
+      const url = `${API_BASE}/api/porters/available`; // no station filter
+      
+      console.log('🔍 Fetching all available porters from:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch porters');
       }
-    };
 
-    fetchAvailablePorters();
-  }, [bookingData]);
+      const data = await response.json();
+      console.log('📦 Available porters:', data);
+      
+      if (data.success && data.data) {
+        setPorters(data.data);
+        if (data.data.length === 0) {
+          toast({
+            title: "No Porters Available",
+            description: "No porters are currently online",
+          });
+        }
+      } else {
+        setPorters([]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching porters:', error);
+      toast({
+        title: "Error Loading Porters",
+        description: "Could not load available porters. Please try again.",
+        variant: "destructive",
+      });
+      setPorters([]);
+    } finally {
+      setLoadingPorters(false);
+    }
+  };
+
+  fetchAvailablePorters();
+}, [bookingData]);
 
   // Show "Porter is approaching" after acceptance
   useEffect(() => {

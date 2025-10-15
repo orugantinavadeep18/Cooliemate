@@ -20,7 +20,7 @@ const BookPorter = () => {
     fullName: "",
     phone: "",
     pnr: "",
-    station: "",
+    station: "Kurnool Station",
     numberOfBags: "",
     weight: "",
     notes: "",
