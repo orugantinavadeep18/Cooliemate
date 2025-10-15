@@ -655,14 +655,16 @@ app.get('/api/notifications/:id', async (req, res) => {
 app.post('/api/bookings', async (req, res) => {
   try {
     const bookingData = req.body;
-
+    
     console.log('📝 Creating booking with data:', bookingData);
 
     // Validate porter exists and is online
-    let porter;
-    if (mongoose.Types.ObjectId.isValid(bookingData.porterId)) {
-      porter = await Porter.findById(bookingData.porterId);
-    }
+    const porter = await Porter.findOne({ 
+      $or: [
+        { badgeNumber: bookingData.porterId },
+        { _id: bookingData.porterId }
+      ]
+    });
 
     if (!porter) {
       console.log('❌ Porter not found:', bookingData.porterId);
@@ -680,10 +682,10 @@ app.post('/api/bookings', async (req, res) => {
       });
     }
 
-    // Ensure Booking schema fields match
-    bookingData.porterId = porter._id; // store as ObjectId
+    // Store MongoDB _id in porterId field for consistency
+    bookingData.porterId = porter._id.toString();
     bookingData.porterBadgeNumber = porter.badgeNumber;
-
+    
     const booking = new Booking(bookingData);
     await booking.save();
 
@@ -693,13 +695,13 @@ app.post('/api/bookings', async (req, res) => {
       success: true,
       message: 'Booking created successfully',
       booking: {
-        id: booking._id.toString(), // convert for frontend
+        id: booking._id.toString(),
         ...booking.toObject()
       }
     });
 
   } catch (error) {
-    console.error('❌ Create Booking Error:', error.stack || error);
+    console.error('❌ Create Booking Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -707,6 +709,7 @@ app.post('/api/bookings', async (req, res) => {
     });
   }
 });
+
 // Get booking by ID
 app.get('/api/bookings/:id', async (req, res) => {
   try {

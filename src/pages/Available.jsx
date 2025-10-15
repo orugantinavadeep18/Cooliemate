@@ -204,69 +204,66 @@ const AvailablePorters = () => {
 
   setSelectedPorter(porter);
   
-  const bookingRequest = {
-    // Use the badgeNumber as porterId (backend will convert to MongoDB _id)
-    porterId: porter.id, // This is badgeNumber
-    porterMongoId: porter.mongoId, // Include MongoDB ID too
-    porterName: porter.name,
-    passengerName: bookingData.personalDetails?.fullName || "Guest",
-    phone: bookingData.personalDetails?.phone || "N/A",
-    pnr: bookingData.travelDetails?.pnr || "N/A",
-    station: bookingData.travelDetails?.station || porter.station,
-    trainNo: bookingData.travelDetails?.trainNo || "N/A",
-    trainName: bookingData.travelDetails?.trainName || "N/A",
-    coachNo: bookingData.travelDetails?.coachNo || "N/A",
-    boardingStation: bookingData.travelDetails?.boardingStation || "N/A",
-    boardingStationCode: bookingData.travelDetails?.boardingStationCode || "N/A",
-    destinationStation: bookingData.travelDetails?.destinationStation || "N/A",
-    destinationStationCode: bookingData.travelDetails?.destinationStationCode || "N/A",
-    dateOfJourney: bookingData.travelDetails?.dateOfJourney || "N/A",
-    arrivalTime: bookingData.travelDetails?.arrivalTime || "N/A",
-    numberOfBags: bookingData.luggageDetails?.numberOfBags || 1,
-    weight: bookingData.luggageDetails?.weight || 10,
-    isLateNight: bookingData.luggageDetails?.isLateNight || false,
-    isPriority: bookingData.luggageDetails?.isPriority || false,
-    totalPrice: bookingData.pricing?.totalPrice || 100,
-    notes: bookingData.notes || "",
-  };
+ const bookingRequest = {
+  porterId: porter.mongoId, // <-- MongoDB ObjectId of the porter
+  porterName: porter.name,
+  passengerName: bookingData.personalDetails?.fullName || "Guest",
+  phone: bookingData.personalDetails?.phone || "N/A",
+  pnr: bookingData.travelDetails?.pnr || "N/A",
+  station: bookingData.travelDetails?.station || porter.station,
+  trainNo: bookingData.travelDetails?.trainNo || "N/A",
+  trainName: bookingData.travelDetails?.trainName || "N/A",
+  coachNo: bookingData.travelDetails?.coachNo || "N/A",
+  boardingStation: bookingData.travelDetails?.boardingStation || "N/A",
+  boardingStationCode: bookingData.travelDetails?.boardingStationCode || "N/A",
+  destinationStation: bookingData.travelDetails?.destinationStation || "N/A",
+  destinationStationCode: bookingData.travelDetails?.destinationStationCode || "N/A",
+  dateOfJourney: bookingData.travelDetails?.dateOfJourney || "N/A",
+  arrivalTime: bookingData.travelDetails?.arrivalTime || "N/A",
+  numberOfBags: bookingData.luggageDetails?.numberOfBags || 1,
+  weight: bookingData.luggageDetails?.weight || 10,
+  isLateNight: bookingData.luggageDetails?.isLateNight || false,
+  isPriority: bookingData.luggageDetails?.isPriority || false,
+  totalPrice: bookingData.pricing?.totalPrice || 100,
+  notes: bookingData.notes || "",
+};
 
-  console.log('📝 Booking request:', bookingRequest);
+console.log('📝 Booking request:', bookingRequest);
 
-  try {
-    const response = await fetch(`${API_BASE}/api/bookings`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(bookingRequest)
-    });
+try {
+  const response = await fetch(`${API_BASE}/api/bookings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bookingRequest),
+  });
 
-    const data = await response.json();
+  const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to create booking');
-    }
-
-    console.log('✅ Booking created successfully:', data);
-    
-    setCurrentBookingId(data.booking.id);
-    setRequestSent(true);
-    setWaitingForResponse(true);
-
-    toast({
-      title: "Request Sent ✓",
-      description: `Request sent to ${porter.name}. Waiting for acceptance...`,
-    });
-  } catch (error) {
-    console.error("❌ Error creating booking:", error);
-    toast({
-      title: "Error",
-      description: error.message || "Failed to send request. Please try again.",
-      variant: "destructive",
-    });
-    setRequestSent(false);
-    setWaitingForResponse(false);
+  if (!response.ok) {
+    throw new Error(data.message || 'Failed to create booking');
   }
+
+  console.log('✅ Booking created successfully:', data);
+
+  setCurrentBookingId(data.booking.id);
+  setRequestSent(true);
+  setWaitingForResponse(true);
+
+  toast({
+    title: "Request Sent ✓",
+    description: `Request sent to ${porter.name}. Waiting for acceptance...`,
+  });
+} catch (error) {
+  console.error("❌ Error creating booking:", error);
+  toast({
+    title: "Error",
+    description: error.message || "Failed to send request. Please try again.",
+    variant: "destructive",
+  });
+  setRequestSent(false);
+  setWaitingForResponse(false);
+}
+
 };
 
   const handleConfirmBooking = () => {
