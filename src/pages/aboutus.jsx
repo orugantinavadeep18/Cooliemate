@@ -124,7 +124,7 @@ const AboutUs = () => {
 
   const team = [
     {
-      name: "Md. Dilnawaz Ahmad",
+      name: "Md Dilnawaz Ahmad",
       role: "Founder & CEO",
       img: "/founder.jpg",
       description:
