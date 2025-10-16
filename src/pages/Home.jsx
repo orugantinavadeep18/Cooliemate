@@ -367,9 +367,7 @@ const Home = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
               >
-                <span className="inline-block px-4 py-2 bg-yellow-400/20 text-yellow-300 rounded-full text-sm font-bold mb-4 border border-yellow-400/30">
-                  SIMPLE PRICING
-                </span>
+               
               </motion.div>
               
               <motion.h2
