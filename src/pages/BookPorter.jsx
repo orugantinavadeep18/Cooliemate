@@ -212,29 +212,29 @@ const BookPorter = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
       {/* Background Decorations */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400 rounded-full filter blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-400 rounded-full filter blur-3xl"></div>
+        <div className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400 rounded-full filter blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-64 h-64 sm:w-96 sm:h-96 bg-indigo-400 rounded-full filter blur-3xl"></div>
       </div>
 
       <Navbar />
       
-      <div className="container mx-auto px-4 py-12 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
         {/* Header Section */}
         <motion.div
           initial="hidden"
           animate="visible"
           variants={fadeUp}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full mb-4">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span className="text-blue-900 text-sm font-semibold">Quick & Easy Booking</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full mb-3 sm:mb-4">
+            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
+            <span className="text-blue-900 text-xs sm:text-sm font-semibold">Quick & Easy Booking</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-4 bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-3 sm:mb-4 bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent px-4">
             Book Your Porter
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-4">
             Fill in your travel details for instant porter booking
           </p>
         </motion.div>
@@ -246,30 +246,30 @@ const BookPorter = () => {
           variants={fadeUp}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Card className="max-w-4xl mx-auto shadow-2xl border-2 border-gray-100 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-8 md:p-12">
-              <form onSubmit={handleSubmit} className="space-y-8">
+          <Card className="max-w-4xl mx-auto shadow-2xl border-2 border-gray-100 rounded-2xl sm:rounded-3xl overflow-hidden bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-4 sm:p-6 md:p-8 lg:p-12">
+              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
                 
                 {/* Personal Details Section */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="space-y-6"
+                  className="space-y-4 sm:space-y-6"
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <h3 className="font-black text-2xl bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                    <h3 className="font-black text-xl sm:text-2xl bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent">
                       Personal Details
                     </h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label htmlFor="fullName" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <User className="w-4 h-4 text-blue-600" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label htmlFor="fullName" className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <User className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                         Full Name *
                       </Label>
                       <Input
@@ -279,13 +279,13 @@ const BookPorter = () => {
                           setFormData({ ...formData, fullName: e.target.value })
                         }
                         placeholder="Enter your full name"
-                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all text-sm sm:text-base"
                         required
                       />
                     </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-blue-600" />
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label htmlFor="phone" className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                         Phone Number *
                       </Label>
                       <Input
@@ -300,7 +300,7 @@ const BookPorter = () => {
                         }
                         placeholder="10 digit number"
                         maxLength={10}
-                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all text-sm sm:text-base"
                         required
                       />
                     </div>
@@ -312,22 +312,22 @@ const BookPorter = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  className="space-y-6"
+                  className="space-y-4 sm:space-y-6"
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                      <Train className="w-5 h-5 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
+                      <Train className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <h3 className="font-black text-2xl bg-gradient-to-r from-green-900 to-emerald-900 bg-clip-text text-transparent">
+                    <h3 className="font-black text-xl sm:text-2xl bg-gradient-to-r from-green-900 to-emerald-900 bg-clip-text text-transparent">
                       Travel Details
                     </h3>
                   </div>
                   
-                  <div className="space-y-3">
-                    <Label htmlFor="pnr" className="text-sm font-semibold text-gray-700">
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label htmlFor="pnr" className="text-xs sm:text-sm font-semibold text-gray-700">
                       PNR Number *
                     </Label>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <Input
                         id="pnr"
                         value={formData.pnr}
@@ -339,18 +339,18 @@ const BookPorter = () => {
                         }
                         placeholder="10 digit PNR (try: 1234567890)"
                         maxLength={10}
-                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all flex-1"
+                        className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all flex-1 text-sm sm:text-base"
                         required
                       />
                       <Button
                         type="button"
                         onClick={handlePNRLookup}
-                        className="h-12 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg hover:shadow-xl transition-all"
+                        className="h-10 sm:h-12 px-6 sm:px-8 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base w-full sm:w-auto"
                         disabled={pnrLoading || formData.pnr.length !== 10}
                       >
                         {pnrLoading ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                             Verifying...
                           </>
                         ) : (
@@ -364,78 +364,78 @@ const BookPorter = () => {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
-                        className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg mt-4"
+                        className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-green-200 shadow-lg mt-4"
                       >
-                        <div className="flex items-center mb-4">
-                          <CheckCircle2 className="w-6 h-6 mr-2 text-green-600" />
-                          <p className="text-green-900 font-bold text-lg">
+                        <div className="flex items-center mb-3 sm:mb-4">
+                          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-green-600 flex-shrink-0" />
+                          <p className="text-green-900 font-bold text-base sm:text-lg">
                             PNR Verified Successfully
                           </p>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-1 sm:mb-2 font-semibold">
                               <Train className="w-3 h-3 mr-1" />
                               Train Details
                             </div>
-                            <p className="font-bold text-gray-900 text-lg">
+                            <p className="font-bold text-gray-900 text-base sm:text-lg">
                               {pnrInfo.trainNo}
                             </p>
-                            <p className="text-sm text-gray-600">{pnrInfo.trainName}</p>
+                            <p className="text-xs sm:text-sm text-gray-600">{pnrInfo.trainName}</p>
                           </div>
                           
-                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <p className="text-xs text-gray-500 uppercase mb-2 font-semibold">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <p className="text-xs text-gray-500 uppercase mb-1 sm:mb-2 font-semibold">
                               Coach Number
                             </p>
-                            <p className="font-bold text-gray-900 text-2xl">
+                            <p className="font-bold text-gray-900 text-xl sm:text-2xl">
                               {pnrInfo.coachNo}
                             </p>
                           </div>
                           
-                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-1 sm:mb-2 font-semibold">
                               <MapPin className="w-3 h-3 mr-1" />
                               From
                             </div>
-                            <p className="font-bold text-gray-900">
+                            <p className="font-bold text-gray-900 text-sm sm:text-base">
                               {pnrInfo.boardingStation}
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600">
                               {pnrInfo.boardingStationCode}
                             </p>
                           </div>
                           
-                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-1 sm:mb-2 font-semibold">
                               <MapPin className="w-3 h-3 mr-1" />
                               To
                             </div>
-                            <p className="font-bold text-gray-900">
+                            <p className="font-bold text-gray-900 text-sm sm:text-base">
                               {pnrInfo.destinationStation}
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600">
                               {pnrInfo.destinationStationCode}
                             </p>
                           </div>
                           
-                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-1 sm:mb-2 font-semibold">
                               <Calendar className="w-3 h-3 mr-1" />
                               Journey Date
                             </div>
-                            <p className="font-bold text-gray-900">
+                            <p className="font-bold text-gray-900 text-sm sm:text-base">
                               {pnrInfo.dateOfJourney}
                             </p>
                           </div>
                           
-                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                          <div className="bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-1 sm:mb-2 font-semibold">
                               <Clock className="w-3 h-3 mr-1" />
                               Arrival Time
                             </div>
-                            <p className="font-bold text-gray-900 text-xl">
+                            <p className="font-bold text-gray-900 text-lg sm:text-xl">
                               {pnrInfo.arrivalTime}
                             </p>
                           </div>
@@ -444,9 +444,9 @@ const BookPorter = () => {
                     )}
                   </div>
 
-                  <div className="space-y-3">
-                    <Label htmlFor="station" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-green-600" />
+                  <div className="space-y-2 sm:space-y-3">
+                    <Label htmlFor="station" className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                       Station *
                     </Label>
                     <Input
@@ -456,7 +456,7 @@ const BookPorter = () => {
                         setFormData({ ...formData, station: e.target.value })
                       }
                       placeholder="e.g., New Delhi"
-                      className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                      className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all text-sm sm:text-base"
                       required
                     />
                     <p className="text-xs text-gray-500">
@@ -470,20 +470,20 @@ const BookPorter = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
-                  className="space-y-6"
+                  className="space-y-4 sm:space-y-6"
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                      <Luggage className="w-5 h-5 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
+                      <Luggage className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <h3 className="font-black text-2xl bg-gradient-to-r from-orange-900 to-red-900 bg-clip-text text-transparent">
+                    <h3 className="font-black text-xl sm:text-2xl bg-gradient-to-r from-orange-900 to-red-900 bg-clip-text text-transparent">
                       Luggage Details
                     </h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label htmlFor="numberOfBags" className="text-sm font-semibold text-gray-700">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label htmlFor="numberOfBags" className="text-xs sm:text-sm font-semibold text-gray-700">
                         Number of Bags *
                       </Label>
                       <Input
@@ -501,12 +501,12 @@ const BookPorter = () => {
                           handleCalculatePrice(updatedData);
                         }}
                         placeholder="e.g., 3"
-                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all text-sm sm:text-base"
                         required
                       />
                     </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="weight" className="text-sm font-semibold text-gray-700">
+                    <div className="space-y-2 sm:space-y-3">
+                      <Label htmlFor="weight" className="text-xs sm:text-sm font-semibold text-gray-700">
                         Approx Weight (kg) *
                       </Label>
                       <Input
@@ -521,19 +521,19 @@ const BookPorter = () => {
                           handleCalculatePrice(updatedData);
                         }}
                         placeholder="e.g., 35"
-                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        className="h-10 sm:h-12 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all text-sm sm:text-base"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-2xl border-2 border-gray-200">
-                    <p className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-yellow-500" />
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-gray-200">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+                      <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
                       Additional Services
                     </p>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3 p-4 bg-white rounded-xl hover:shadow-md transition-shadow">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="flex items-center space-x-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl hover:shadow-md transition-shadow">
                         <Checkbox
                           id="lateNight"
                           checked={formData.isLateNight}
@@ -542,14 +542,14 @@ const BookPorter = () => {
                             setFormData(updatedData);
                             handleCalculatePrice(updatedData);
                           }}
-                          className="w-5 h-5"
+                          className="w-4 h-4 sm:w-5 sm:h-5"
                         />
-                        <Label htmlFor="lateNight" className="text-sm cursor-pointer font-medium flex-1">
+                        <Label htmlFor="lateNight" className="text-xs sm:text-sm cursor-pointer font-medium flex-1">
                           Late Night Service (11 PM - 5 AM)
                         </Label>
-                        <span className="font-bold text-blue-600">+₹20</span>
+                        <span className="font-bold text-blue-600 text-xs sm:text-sm">+₹20</span>
                       </div>
-                      <div className="flex items-center space-x-3 p-4 bg-white rounded-xl hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl hover:shadow-md transition-shadow">
                         <Checkbox
                           id="priority"
                           checked={formData.isPriority}
@@ -558,12 +558,12 @@ const BookPorter = () => {
                             setFormData(updatedData);
                             handleCalculatePrice(updatedData);
                           }}
-                          className="w-5 h-5"
+                          className="w-4 h-4 sm:w-5 sm:h-5"
                         />
-                        <Label htmlFor="priority" className="text-sm cursor-pointer font-medium flex-1">
+                        <Label htmlFor="priority" className="text-xs sm:text-sm cursor-pointer font-medium flex-1">
                           Priority Service (Immediate assistance)
                         </Label>
-                        <span className="font-bold text-blue-600">+₹30</span>
+                        <span className="font-bold text-blue-600 text-xs sm:text-sm">+₹30</span>
                       </div>
                     </div>
                   </div>
@@ -575,32 +575,32 @@ const BookPorter = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3 }}
-                    className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 rounded-3xl shadow-2xl text-white"
+                    className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl text-white"
                   >
-                    <h4 className="font-black text-2xl mb-6 flex items-center">
-                      <IndianRupee className="w-7 h-7 mr-2" />
+                    <h4 className="font-black text-xl sm:text-2xl mb-4 sm:mb-6 flex items-center">
+                      <IndianRupee className="w-5 h-5 sm:w-7 sm:h-7 mr-2" />
                       Estimated Fare
                     </h4>
-                    <div className="space-y-4 text-lg">
+                    <div className="space-y-3 sm:space-y-4 text-base sm:text-lg">
                       <div className="flex justify-between items-center py-2 border-b border-white/20">
-                        <span className="text-blue-100">{pricing.description}</span>
-                        <span className="font-bold text-xl">₹{pricing.basePrice}</span>
+                        <span className="text-blue-100 text-sm sm:text-base">{pricing.description}</span>
+                        <span className="font-bold text-lg sm:text-xl">₹{pricing.basePrice}</span>
                       </div>
                       {pricing.lateNightCharge > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-white/20">
-                          <span className="text-blue-100">Late Night Charge</span>
-                          <span className="font-bold text-xl">₹{pricing.lateNightCharge}</span>
+                          <span className="text-blue-100 text-sm sm:text-base">Late Night Charge</span>
+                          <span className="font-bold text-lg sm:text-xl">₹{pricing.lateNightCharge}</span>
                         </div>
                       )}
                       {pricing.priorityCharge > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-white/20">
-                          <span className="text-blue-100">Priority Service</span>
-                          <span className="font-bold text-xl">₹{pricing.priorityCharge}</span>
+                          <span className="text-blue-100 text-sm sm:text-base">Priority Service</span>
+                          <span className="font-bold text-lg sm:text-xl">₹{pricing.priorityCharge}</span>
                         </div>
                       )}
-                      <div className="pt-4 mt-2 flex justify-between items-center">
-                        <span className="font-black text-2xl">Total Amount</span>
-                        <span className="font-black text-4xl text-yellow-300">₹{pricing.totalPrice}</span>
+                      <div className="pt-3 sm:pt-4 mt-2 flex justify-between items-center">
+                        <span className="font-black text-xl sm:text-2xl">Total Amount</span>
+                        <span className="font-black text-3xl sm:text-4xl text-yellow-300">₹{pricing.totalPrice}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -611,9 +611,9 @@ const BookPorter = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
-                  className="space-y-3"
+                  className="space-y-2 sm:space-y-3"
                 >
-                  <Label htmlFor="notes" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="notes" className="text-xs sm:text-sm font-semibold text-gray-700">
                     Additional Notes (Optional)
                   </Label>
                   <Textarea
@@ -624,7 +624,7 @@ const BookPorter = () => {
                     }
                     placeholder="Any special requirements or instructions for the porter..."
                     rows={4}
-                    className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all resize-none"
+                    className="rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all resize-none text-sm sm:text-base"
                   />
                 </motion.div>
 
@@ -635,18 +635,18 @@ const BookPorter = () => {
                 >
                   <Button
                     type="submit"
-                    className="w-full h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-[1.02] group"
+                    className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-[1.02] group"
                     disabled={loading || !pnrInfo}
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Processing Your Booking...
+                        <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                        <span className="text-sm sm:text-base">Processing Your Booking...</span>
                       </>
                     ) : (
                       <>
-                        Find Available Porters
-                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        <span className="text-sm sm:text-base">Find Available Porters</span>
+                        <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
                   </Button>
