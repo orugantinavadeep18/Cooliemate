@@ -8,9 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { mockPNRData, calculatePrice } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, IndianRupee, Train, MapPin, Calendar, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, IndianRupee, Train, MapPin, Calendar, Clock, User, Phone, Luggage, Sparkles, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const BookPorter = () => {
   const { toast } = useToast();
@@ -165,7 +166,6 @@ const BookPorter = () => {
 
     setLoading(true);
 
-    // Prepare booking data to pass to available porters page
     const bookingData = {
       personalDetails: {
         fullName: formData.fullName,
@@ -196,13 +196,9 @@ const BookPorter = () => {
 
     console.log('📦 Booking data prepared:', bookingData);
 
-    // Simulate validation delay
     setTimeout(() => {
       setLoading(false);
-      
-      // Navigate to available porters page with booking data
       navigate("/available", { state: bookingData });
-      
       toast({
         title: "Details Verified ✓",
         description: "Showing available porters for your booking",
@@ -210,320 +206,455 @@ const BookPorter = () => {
     }, 1500);
   };
 
+  const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      {/* Background Decorations */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400 rounded-full filter blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-400 rounded-full filter blur-3xl"></div>
+      </div>
+
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto shadow-elevated">
-          <CardHeader>
-            <CardTitle className="text-2xl md:text-3xl text-center">
-              Book Your Porter
-            </CardTitle>
-            <p className="text-center text-muted-foreground">
-              Fill in your travel details for instant porter booking
-            </p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Details */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Personal Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name *</Label>
-                    <Input
-                      id="fullName"
-                      value={formData.fullName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, fullName: e.target.value })
-                      }
-                      placeholder="Enter your full name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          phone: e.target.value.replace(/\D/g, "").slice(0, 10),
-                        })
-                      }
-                      placeholder="10 digit number"
-                      maxLength={10}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+      
+      <div className="container mx-auto px-4 py-12 relative z-10">
+        {/* Header Section */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeUp}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full mb-4">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-900 text-sm font-semibold">Quick & Easy Booking</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-4 bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+            Book Your Porter
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Fill in your travel details for instant porter booking
+          </p>
+        </motion.div>
 
-              {/* Travel Details */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Travel Details</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="pnr">PNR Number *</Label>
-                  <div className="flex gap-2">
+        {/* Main Form Card */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeUp}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Card className="max-w-4xl mx-auto shadow-2xl border-2 border-gray-100 rounded-3xl overflow-hidden bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-8 md:p-12">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                
+                {/* Personal Details Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-black text-2xl bg-gradient-to-r from-blue-900 to-indigo-900 bg-clip-text text-transparent">
+                      Personal Details
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="fullName" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <User className="w-4 h-4 text-blue-600" />
+                        Full Name *
+                      </Label>
+                      <Input
+                        id="fullName"
+                        value={formData.fullName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, fullName: e.target.value })
+                        }
+                        placeholder="Enter your full name"
+                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-blue-600" />
+                        Phone Number *
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            phone: e.target.value.replace(/\D/g, "").slice(0, 10),
+                          })
+                        }
+                        placeholder="10 digit number"
+                        maxLength={10}
+                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Travel Details Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                      <Train className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-black text-2xl bg-gradient-to-r from-green-900 to-emerald-900 bg-clip-text text-transparent">
+                      Travel Details
+                    </h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Label htmlFor="pnr" className="text-sm font-semibold text-gray-700">
+                      PNR Number *
+                    </Label>
+                    <div className="flex gap-3">
+                      <Input
+                        id="pnr"
+                        value={formData.pnr}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pnr: e.target.value.replace(/\D/g, "").slice(0, 10),
+                          })
+                        }
+                        placeholder="10 digit PNR (try: 1234567890)"
+                        maxLength={10}
+                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all flex-1"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        onClick={handlePNRLookup}
+                        className="h-12 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg hover:shadow-xl transition-all"
+                        disabled={pnrLoading || formData.pnr.length !== 10}
+                      >
+                        {pnrLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          "Verify PNR"
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {pnrInfo && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg mt-4"
+                      >
+                        <div className="flex items-center mb-4">
+                          <CheckCircle2 className="w-6 h-6 mr-2 text-green-600" />
+                          <p className="text-green-900 font-bold text-lg">
+                            PNR Verified Successfully
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                              <Train className="w-3 h-3 mr-1" />
+                              Train Details
+                            </div>
+                            <p className="font-bold text-gray-900 text-lg">
+                              {pnrInfo.trainNo}
+                            </p>
+                            <p className="text-sm text-gray-600">{pnrInfo.trainName}</p>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <p className="text-xs text-gray-500 uppercase mb-2 font-semibold">
+                              Coach Number
+                            </p>
+                            <p className="font-bold text-gray-900 text-2xl">
+                              {pnrInfo.coachNo}
+                            </p>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                              <MapPin className="w-3 h-3 mr-1" />
+                              From
+                            </div>
+                            <p className="font-bold text-gray-900">
+                              {pnrInfo.boardingStation}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {pnrInfo.boardingStationCode}
+                            </p>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                              <MapPin className="w-3 h-3 mr-1" />
+                              To
+                            </div>
+                            <p className="font-bold text-gray-900">
+                              {pnrInfo.destinationStation}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {pnrInfo.destinationStationCode}
+                            </p>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              Journey Date
+                            </div>
+                            <p className="font-bold text-gray-900">
+                              {pnrInfo.dateOfJourney}
+                            </p>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex items-center text-xs text-gray-500 uppercase mb-2 font-semibold">
+                              <Clock className="w-3 h-3 mr-1" />
+                              Arrival Time
+                            </div>
+                            <p className="font-bold text-gray-900 text-xl">
+                              {pnrInfo.arrivalTime}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="station" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-green-600" />
+                      Station *
+                    </Label>
                     <Input
-                      id="pnr"
-                      value={formData.pnr}
+                      id="station"
+                      value={formData.station}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          pnr: e.target.value.replace(/\D/g, "").slice(0, 10),
-                        })
+                        setFormData({ ...formData, station: e.target.value })
                       }
-                      placeholder="10 digit PNR (try: 1234567890)"
-                      maxLength={10}
+                      placeholder="e.g., New Delhi"
+                      className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
                       required
                     />
-                    <Button
-                      type="button"
-                      onClick={handlePNRLookup}
-                      variant="secondary"
-                      disabled={pnrLoading || formData.pnr.length !== 10}
-                    >
-                      {pnrLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (
-                        "Verify"
+                    <p className="text-xs text-gray-500">
+                      Enter the station where you need porter service
+                    </p>
+                  </div>
+                </motion.div>
+
+                {/* Luggage Details Section */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                      <Luggage className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="font-black text-2xl bg-gradient-to-r from-orange-900 to-red-900 bg-clip-text text-transparent">
+                      Luggage Details
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="numberOfBags" className="text-sm font-semibold text-gray-700">
+                        Number of Bags *
+                      </Label>
+                      <Input
+                        id="numberOfBags"
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={formData.numberOfBags}
+                        onChange={(e) => {
+                          const updatedData = {
+                            ...formData,
+                            numberOfBags: e.target.value,
+                          };
+                          setFormData(updatedData);
+                          handleCalculatePrice(updatedData);
+                        }}
+                        placeholder="e.g., 3"
+                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="weight" className="text-sm font-semibold text-gray-700">
+                        Approx Weight (kg) *
+                      </Label>
+                      <Input
+                        id="weight"
+                        type="number"
+                        min="1"
+                        max="200"
+                        value={formData.weight}
+                        onChange={(e) => {
+                          const updatedData = { ...formData, weight: e.target.value };
+                          setFormData(updatedData);
+                          handleCalculatePrice(updatedData);
+                        }}
+                        placeholder="e.g., 35"
+                        className="h-12 rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-2xl border-2 border-gray-200">
+                    <p className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-yellow-500" />
+                      Additional Services
+                    </p>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3 p-4 bg-white rounded-xl hover:shadow-md transition-shadow">
+                        <Checkbox
+                          id="lateNight"
+                          checked={formData.isLateNight}
+                          onCheckedChange={(checked) => {
+                            const updatedData = { ...formData, isLateNight: checked };
+                            setFormData(updatedData);
+                            handleCalculatePrice(updatedData);
+                          }}
+                          className="w-5 h-5"
+                        />
+                        <Label htmlFor="lateNight" className="text-sm cursor-pointer font-medium flex-1">
+                          Late Night Service (11 PM - 5 AM)
+                        </Label>
+                        <span className="font-bold text-blue-600">+₹20</span>
+                      </div>
+                      <div className="flex items-center space-x-3 p-4 bg-white rounded-xl hover:shadow-md transition-shadow">
+                        <Checkbox
+                          id="priority"
+                          checked={formData.isPriority}
+                          onCheckedChange={(checked) => {
+                            const updatedData = { ...formData, isPriority: checked };
+                            setFormData(updatedData);
+                            handleCalculatePrice(updatedData);
+                          }}
+                          className="w-5 h-5"
+                        />
+                        <Label htmlFor="priority" className="text-sm cursor-pointer font-medium flex-1">
+                          Priority Service (Immediate assistance)
+                        </Label>
+                        <span className="font-bold text-blue-600">+₹30</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Pricing Display */}
+                {pricing && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 rounded-3xl shadow-2xl text-white"
+                  >
+                    <h4 className="font-black text-2xl mb-6 flex items-center">
+                      <IndianRupee className="w-7 h-7 mr-2" />
+                      Estimated Fare
+                    </h4>
+                    <div className="space-y-4 text-lg">
+                      <div className="flex justify-between items-center py-2 border-b border-white/20">
+                        <span className="text-blue-100">{pricing.description}</span>
+                        <span className="font-bold text-xl">₹{pricing.basePrice}</span>
+                      </div>
+                      {pricing.lateNightCharge > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-white/20">
+                          <span className="text-blue-100">Late Night Charge</span>
+                          <span className="font-bold text-xl">₹{pricing.lateNightCharge}</span>
+                        </div>
                       )}
-                    </Button>
-                  </div>
-                  {pnrInfo && (
-                    <div className="text-sm space-y-3 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200 shadow-sm">
-                      <p className="text-blue-900 font-semibold flex items-center mb-3">
-                        <CheckCircle2 className="w-5 h-5 mr-2 text-green-600" />
-                        PNR Verified Successfully
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-3 rounded-md shadow-sm">
-                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
-                            <Train className="w-3 h-3 mr-1" />
-                            Train
-                          </div>
-                          <p className="font-semibold text-blue-900">
-                            {pnrInfo.trainNo} - {pnrInfo.trainName}
-                          </p>
+                      {pricing.priorityCharge > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-white/20">
+                          <span className="text-blue-100">Priority Service</span>
+                          <span className="font-bold text-xl">₹{pricing.priorityCharge}</span>
                         </div>
-                        <div className="bg-white p-3 rounded-md shadow-sm">
-                          <p className="text-xs text-muted-foreground uppercase mb-1">
-                            Coach
-                          </p>
-                          <p className="font-semibold text-blue-900">
-                            {pnrInfo.coachNo}
-                          </p>
-                        </div>
-                        <div className="bg-white p-3 rounded-md shadow-sm">
-                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            From
-                          </div>
-                          <p className="font-semibold text-blue-900">
-                            {pnrInfo.boardingStation}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {pnrInfo.boardingStationCode}
-                          </p>
-                        </div>
-                        <div className="bg-white p-3 rounded-md shadow-sm">
-                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            To
-                          </div>
-                          <p className="font-semibold text-blue-900">
-                            {pnrInfo.destinationStation}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {pnrInfo.destinationStationCode}
-                          </p>
-                        </div>
-                        <div className="bg-white p-3 rounded-md shadow-sm">
-                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
-                            <Calendar className="w-3 h-3 mr-1" />
-                            Date of Journey
-                          </div>
-                          <p className="font-semibold text-blue-900">
-                            {pnrInfo.dateOfJourney}
-                          </p>
-                        </div>
-                        <div className="bg-white p-3 rounded-md shadow-sm">
-                          <div className="flex items-center text-xs text-muted-foreground uppercase mb-1">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Arrival Time
-                          </div>
-                          <p className="font-semibold text-blue-900">
-                            {pnrInfo.arrivalTime}
-                          </p>
-                        </div>
+                      )}
+                      <div className="pt-4 mt-2 flex justify-between items-center">
+                        <span className="font-black text-2xl">Total Amount</span>
+                        <span className="font-black text-4xl text-yellow-300">₹{pricing.totalPrice}</span>
                       </div>
                     </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="station">Station *</Label>
-                  <Input
-                    id="station"
-                    value={formData.station}
-                    onChange={(e) =>
-                      setFormData({ ...formData, station: e.target.value })
-                    }
-                    placeholder="e.g., New Delhi"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter the station where you need porter service
-                  </p>
-                </div>
-              </div>
-
-              {/* Luggage Details */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Luggage Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="numberOfBags">Number of Bags *</Label>
-                    <Input
-                      id="numberOfBags"
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={formData.numberOfBags}
-                      onChange={(e) => {
-                        const updatedData = {
-                          ...formData,
-                          numberOfBags: e.target.value,
-                        };
-                        setFormData(updatedData);
-                        handleCalculatePrice(updatedData);
-                      }}
-                      placeholder="e.g., 3"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weight">Approx Weight (kg) *</Label>
-                    <Input
-                      id="weight"
-                      type="number"
-                      min="1"
-                      max="200"
-                      value={formData.weight}
-                      onChange={(e) => {
-                        const updatedData = { ...formData, weight: e.target.value };
-                        setFormData(updatedData);
-                        handleCalculatePrice(updatedData);
-                      }}
-                      placeholder="e.g., 35"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm font-medium">Additional Services</p>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="lateNight"
-                      checked={formData.isLateNight}
-                      onCheckedChange={(checked) => {
-                        const updatedData = { ...formData, isLateNight: checked };
-                        setFormData(updatedData);
-                        handleCalculatePrice(updatedData);
-                      }}
-                    />
-                    <Label htmlFor="lateNight" className="text-sm cursor-pointer">
-                      Late Night Service (11 PM - 5 AM) <span className="font-semibold text-primary">+₹20</span>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="priority"
-                      checked={formData.isPriority}
-                      onCheckedChange={(checked) => {
-                        const updatedData = { ...formData, isPriority: checked };
-                        setFormData(updatedData);
-                        handleCalculatePrice(updatedData);
-                      }}
-                    />
-                    <Label htmlFor="priority" className="text-sm cursor-pointer">
-                      Priority Service (Immediate assistance) <span className="font-semibold text-primary">+₹30</span>
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pricing Display */}
-              {pricing && (
-                <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-5 rounded-lg border-2 border-primary/20 shadow-sm">
-                  <h4 className="font-semibold flex items-center text-lg mb-3">
-                    <IndianRupee className="w-5 h-5 mr-2 text-primary" />
-                    Estimated Fare
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between py-1">
-                      <span className="text-muted-foreground">{pricing.description}</span>
-                      <span className="font-medium">₹{pricing.basePrice}</span>
-                    </div>
-                    {pricing.lateNightCharge > 0 && (
-                      <div className="flex justify-between py-1">
-                        <span className="text-muted-foreground">Late Night Charge</span>
-                        <span className="font-medium">₹{pricing.lateNightCharge}</span>
-                      </div>
-                    )}
-                    {pricing.priorityCharge > 0 && (
-                      <div className="flex justify-between py-1">
-                        <span className="text-muted-foreground">Priority Service</span>
-                        <span className="font-medium">₹{pricing.priorityCharge}</span>
-                      </div>
-                    )}
-                    <div className="border-t-2 border-primary/30 pt-3 mt-2 flex justify-between font-bold text-lg">
-                      <span>Total Amount</span>
-                      <span className="text-primary">₹{pricing.totalPrice}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Additional Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
-                  placeholder="Any special requirements or instructions for the porter..."
-                  rows={3}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={loading || !pnrInfo}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Find Available Porters →"
+                  </motion.div>
                 )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+
+                {/* Additional Notes */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  className="space-y-3"
+                >
+                  <Label htmlFor="notes" className="text-sm font-semibold text-gray-700">
+                    Additional Notes (Optional)
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
+                    placeholder="Any special requirements or instructions for the porter..."
+                    rows={4}
+                    className="rounded-xl border-2 border-gray-200 focus:border-blue-500 transition-all resize-none"
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.7 }}
+                >
+                  <Button
+                    type="submit"
+                    className="w-full h-14 text-lg font-bold rounded-2xl bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-[1.02] group"
+                    disabled={loading || !pnrInfo}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing Your Booking...
+                      </>
+                    ) : (
+                      <>
+                        Find Available Porters
+                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

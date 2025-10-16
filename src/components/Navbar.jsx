@@ -1,16 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { Home, Package, LogIn, Info, ShoppingBag } from "lucide-react";
+import { Home, Package, LogIn, Info, ShoppingBag, Mail, Linkedin, Phone, MapPin, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import NotificationCenter from "@/components/NotificationCenter";
+import { motion, AnimatePresence } from "framer-motion";
 
+// Modern Navbar Component
 const Navbar = () => {
   const [userType, setUserType] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
-    // Try to get from state/memory first
     if (location.pathname.includes("/porter")) {
       setUserType("porter");
       setUserId("1234");
@@ -26,100 +28,201 @@ const Navbar = () => {
     }
   }, [location.pathname]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const navLinks = [
     { name: "Home", path: "/", icon: Home },
     { name: "Book Porter", path: "/book", icon: Package },
     { name: "Porter Login", path: "/porter-login", icon: LogIn },
     { name: "About Us", path: "/about", icon: Info },
-    { name: "My Orders", path: "/my-orders", icon: ShoppingBag },
+    { name: "Services", path: "/my-orders", icon: ShoppingBag },
   ];
 
   return (
     <>
-      <nav>
-        {/* Desktop Navbar */}
-        <div className="hidden md:flex sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm items-center justify-between px-8 h-16">
-          <Link to="/" className="flex items-center space-x-3">
-            <img src="/logo.png" alt="CoolieMate Logo" className="h-16 w-16 object-contain" />
-            <span className="text-4xl font-extrabold text-[#e63946]">CoolieMate</span>
-          </Link>
-
-          <div className="flex items-center space-x-4">
-            {navLinks.map((link) => (
-              <Link key={link.path} to={link.path}>
-                <Button
-                  variant={location.pathname === link.path ? "secondary" : "ghost"}
-                  size="sm"
-                  className="font-medium"
-                >
-                  {link.name}
-                </Button>
-              </Link>
-            ))}
-
-            {userId && userType && (
-              <NotificationCenter userId={userId} userType={userType} />
-            )}
-          </div>
-        </div>
-
-          {/* Mobile Top Bar */}
-        <div className="md:hidden sticky top-0 flex items-center justify-center px-4 h-14 bg-white border-b border-gray-200 shadow-sm z-40">
-          {/* Logo + Title - Centered */}
-          <div className="flex items-center space-x-2">
-            <img src="/logo.png" alt="CoolieMate Logo" className="h-9 w-9" />
-            <span className="text-lg font-bold text-[#e63946]">CoolieMate</span>
-          </div>
-
-          {/* Notification - Absolute positioned */}
-          {userId && userType && (
-            <div className="absolute right-4">
-              <NotificationCenter userId={userId} userType={userType} />
-            </div>
-          )}
-        </div>
-      </nav>
-
- {/* Mobile Bottom Navigation - Only shows on mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg z-50">
-        <div className="flex items-center justify-around px-1 py-2">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = location.pathname === link.path;
-            
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`flex flex-col items-center justify-center flex-1 py-2 px-1 min-w-0 rounded-lg transition-colors ${
-                  isActive ? 'bg-red-100' : 'hover:bg-red-50'
-                }`}
-              >
-                <Icon 
-                  size={24}
-                  className={`flex-shrink-0 ${
-                    isActive ? 'text-[#e63946]' : 'text-gray-600'
-                  }`}
-                />
-                <span 
-                  className={`text-xs mt-1 font-medium truncate whitespace-nowrap max-w-full ${
-                    isActive ? 'text-[#e63946]' : 'text-gray-600'
-                  }`}
-                >
-                  {link.name}
+      {/* Desktop Navbar */}
+      <motion.nav
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, type: "spring" }}
+        className={`hidden md:block sticky top-0 z-50 transition-all duration-300 ${
+          scrolled 
+            ? 'bg-white/95 backdrop-blur-lg shadow-xl border-b border-gray-200' 
+            : 'bg-white border-b border-gray-100'
+        }`}
+      >
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-3 group">
+              <motion.img 
+                whileHover={{ rotate: 360, scale: 1.1 }}
+                transition={{ duration: 0.6 }}
+                src="/logo.png" 
+                alt="CoolieMate Logo" 
+                className="h-14 w-14 object-contain drop-shadow-lg" 
+              />
+              <div className="flex flex-col">
+                <span className="text-3xl font-black bg-gradient-to-r from-red-600 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                  CoolieMate
                 </span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+                <span className="text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
+              </div>
+            </Link>
 
-      {/* Spacer for mobile bottom nav - prevents content from being hidden */}
-      {/* <div className="md:hidden h-28" /> */}
-      {/* Spacer for mobile bottom nav */}
-      {/* <div className="md:hidden h-20" /> */}
+            {/* Navigation Links */}
+            <div className="flex items-center space-x-2">
+              {navLinks.map((link, index) => {
+                const isActive = location.pathname === link.path;
+                return (
+                  <motion.div
+                    key={link.path}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link to={link.path}>
+                      <Button
+                        variant={isActive ? "default" : "ghost"}
+                        size="lg"
+                        className={`font-semibold transition-all duration-300 ${
+                          isActive 
+                            ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg hover:shadow-red-500/50 hover:scale-105' 
+                            : 'hover:bg-red-50 hover:text-red-600'
+                        }`}
+                      >
+                        {link.name}
+                      </Button>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+
+              {/* CTA Button */}
+              {/* <Link to="/book">
+                <Button
+                  size="lg"
+                  className="ml-4 font-bold bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black shadow-lg hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-105"
+                >
+                  Book Now
+                </Button>
+              </Link> */}
+            </div>
+          </div>
+        </div>
+      </motion.nav>
+
+      {/* Mobile Navbar */}
+<div className="md:hidden">
+  {/* Top Bar */}
+  <motion.div
+    initial={{ y: -100 }}
+    animate={{ y: 0 }}
+    className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled
+        ? 'bg-white/95 backdrop-blur-lg shadow-xl'
+        : 'bg-white shadow-md'
+    }`}
+  >
+    <div className="flex items-center justify-center px-4 h-16">
+      <Link to="/" className="flex items-center space-x-2">
+        <img src="/logo.png" alt="CoolieMate Logo" className="h-10 w-10" />
+        <span className="text-xl font-black bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
+          CoolieMate
+        </span>
+      </Link>
+    </div>
+  </motion.div>
+
+
+
+        {/* Mobile Menu Overlay */}
+        {/* <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-x-0 top-16 z-40 bg-white shadow-2xl border-b border-gray-200"
+            >
+              <div className="px-4 py-6 space-y-2">
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = location.pathname === link.path;
+                  
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center space-x-3 p-4 rounded-xl transition-all duration-300 ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg' 
+                          : 'hover:bg-red-50 text-gray-700'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-semibold">{link.name}</span>
+                    </Link>
+                  );
+                })}
+                
+               
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence> */}
+
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-2xl z-50">
+          <div className="flex items-center justify-around px-2 py-3">
+            {navLinks.slice(0, 5).map((link) => {
+              const Icon = link.icon;
+              const isActive = location.pathname === link.path;
+              
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="flex flex-col items-center justify-center flex-1 min-w-0"
+                >
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
+                    className={`flex flex-col items-center p-2 rounded-xl transition-all duration-300 ${
+                      isActive ? 'bg-red-50' : ''
+                    }`}
+                  >
+                    <Icon 
+                      size={22}
+                      className={`transition-colors ${
+                        isActive ? 'text-red-600' : 'text-gray-600'
+                      }`}
+                    />
+                    <span 
+                      className={`text-xs mt-1 font-medium truncate max-w-full ${
+                        isActive ? 'text-red-600' : 'text-gray-600'
+                      }`}
+                    >
+                      {link.name.split(' ')[0]}
+                    </span>
+                  </motion.div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Spacer */}
+        <div className="h-20" />
+      </div>
     </>
   );
 };
-
 export default Navbar;
