@@ -94,7 +94,6 @@ const PorterDashboard = () => {
 
   const loadBookings = async (porterId, token) => {
     try {
-      // Use porterId directly - it can be either badgeNumber or MongoDB _id
       console.log('Fetching bookings for porterId:', porterId);
       
       const response = await fetch(`${API_BASE}/api/porter/${porterId}/bookings`, {
@@ -105,12 +104,17 @@ const PorterDashboard = () => {
 
       if (!response.ok) {
         console.error('Failed to load bookings, status:', response.status);
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
         throw new Error('Failed to load bookings');
       }
 
       const data = await response.json();
+      console.log('Bookings loaded:', data);
+      
       // Ensure data.data is always an array
-      setBookings(Array.isArray(data.data) ? data.data : []);
+      const bookingsArray = Array.isArray(data.data) ? data.data : [];
+      setBookings(bookingsArray);
     } catch (error) {
       console.error('Error loading bookings:', error);
       setBookings([]); // Set empty array on error
@@ -155,10 +159,14 @@ const PorterDashboard = () => {
   };
 
   const handleBookingAction = async (bookingId, action) => {
-    setProcessingBooking(bookingId);
     const token = localStorage.getItem('porterToken');
+    const porterId = localStorage.getItem('porterId');
+    
+    setProcessingBooking(bookingId);
 
     try {
+      console.log(`Attempting to ${action} booking:`, bookingId);
+      
       const response = await fetch(`${API_BASE}/api/bookings/${bookingId}/status`, {
         method: 'PATCH',
         headers: {
@@ -169,8 +177,13 @@ const PorterDashboard = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${action} booking`);
+        const errorData = await response.json();
+        console.error('Failed response:', errorData);
+        throw new Error(errorData.message || `Failed to ${action} booking`);
       }
+
+      const result = await response.json();
+      console.log(`Booking ${action} successfully:`, result);
 
       toast({
         title: "Success",
@@ -178,14 +191,12 @@ const PorterDashboard = () => {
       });
 
       // Reload bookings
-      const porterId = localStorage.getItem('porterId');
-      const token = localStorage.getItem('porterToken');
-      loadBookings(porterId, token);
+      await loadBookings(porterId, token);
     } catch (error) {
       console.error(`Error ${action} booking:`, error);
       toast({
         title: "Error",
-        description: `Failed to ${action} booking`,
+        description: error.message || `Failed to ${action} booking`,
         variant: "destructive",
       });
     } finally {
@@ -219,9 +230,10 @@ const PorterDashboard = () => {
     return null;
   }
 
-  const pendingBookings = (bookings || []).filter(b => b.status === 'pending');
-  const acceptedBookings = (bookings || []).filter(b => b.status === 'accepted');
-  const completedBookings = (bookings || []).filter(b => b.status === 'completed');
+  // Safely filter bookings with fallback to empty array
+  const pendingBookings = Array.isArray(bookings) ? bookings.filter(b => b.status === 'pending') : [];
+  const acceptedBookings = Array.isArray(bookings) ? bookings.filter(b => b.status === 'accepted') : [];
+  const completedBookings = Array.isArray(bookings) ? bookings.filter(b => b.status === 'completed') : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -330,7 +342,7 @@ const PorterDashboard = () => {
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Languages:</p>
                   <div className="flex flex-wrap gap-2">
-                    {porterData.languages.map((lang) => (
+                    {porterData.languages && porterData.languages.map((lang) => (
                       <Badge key={lang} variant="secondary" className="text-xs">
                         {lang}
                       </Badge>
