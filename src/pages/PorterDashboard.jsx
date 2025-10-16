@@ -54,7 +54,7 @@ const PorterDashboard = () => {
       return;
     }
 
-    loadPorterData(token);
+    loadPorterData(token, porterId);
     loadBookings(porterId, token);
 
     // Poll for new bookings every 5 seconds
@@ -65,7 +65,7 @@ const PorterDashboard = () => {
     return () => clearInterval(interval);
   }, [navigate, toast]);
 
-  const loadPorterData = async (token) => {
+  const loadPorterData = async (token, porterId) => {
     try {
       const response = await fetch(`${API_BASE}/api/porter/profile`, {
         headers: {
@@ -94,21 +94,26 @@ const PorterDashboard = () => {
 
   const loadBookings = async (porterId, token) => {
     try {
-      const badgeNumber = localStorage.getItem('porterBadgeNumber');
-      const response = await fetch(`${API_BASE}/api/porter/${badgeNumber}/bookings`, {
+      // Use porterId directly - it can be either badgeNumber or MongoDB _id
+      console.log('Fetching bookings for porterId:', porterId);
+      
+      const response = await fetch(`${API_BASE}/api/porter/${porterId}/bookings`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
       if (!response.ok) {
+        console.error('Failed to load bookings, status:', response.status);
         throw new Error('Failed to load bookings');
       }
 
       const data = await response.json();
-      setBookings(data.data);
+      // Ensure data.data is always an array
+      setBookings(Array.isArray(data.data) ? data.data : []);
     } catch (error) {
       console.error('Error loading bookings:', error);
+      setBookings([]); // Set empty array on error
     }
   };
 
@@ -174,6 +179,7 @@ const PorterDashboard = () => {
 
       // Reload bookings
       const porterId = localStorage.getItem('porterId');
+      const token = localStorage.getItem('porterToken');
       loadBookings(porterId, token);
     } catch (error) {
       console.error(`Error ${action} booking:`, error);
@@ -213,9 +219,9 @@ const PorterDashboard = () => {
     return null;
   }
 
-  const pendingBookings = bookings.filter(b => b.status === 'pending');
-  const acceptedBookings = bookings.filter(b => b.status === 'accepted');
-  const completedBookings = bookings.filter(b => b.status === 'completed');
+  const pendingBookings = (bookings || []).filter(b => b.status === 'pending');
+  const acceptedBookings = (bookings || []).filter(b => b.status === 'accepted');
+  const completedBookings = (bookings || []).filter(b => b.status === 'completed');
 
   return (
     <div className="min-h-screen bg-background">
