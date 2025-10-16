@@ -9,7 +9,7 @@ import {
   Clock,
   Star,
   X,
-  Volume2
+  Package
 } from "lucide-react";
 
 const NotificationCenter = ({ userId, userType = "passenger" }) => {
@@ -19,8 +19,8 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
   const audioRef = useRef(null);
   const pollIntervalRef = useRef(null);
 
-  // Notification sound URLs (you can use custom sounds or these free ones)
-  const notificationSound = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZUQ4NVKzn77FgGQk+ltrywnMnBSuAzvLaizgIGGa47OihURELTaLh8bllHAc4ldfz0H8tBSV5yPDejz8JFV611+yrWBQLR5zi8L94IQcxitDz1IU1BShy7"; // Truncated for brevity
+  // Notification sound URLs
+  const notificationSound = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBzGH0fPTgjMGHm7A7+OZUQ4NVKzn77FgGQk+ltrywnMnBSuAzvLaizgIGGa47OihURELTaLh8bllHAc4ldfz0H8tBSV5yPDejz8JFV611+yrWBQLR5zi8L94IQcxitDz1IU1BShy7";
 
   useEffect(() => {
     // Initialize audio
@@ -39,29 +39,53 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [userId]);
+  }, [userId, userType]);
 
   const fetchNotifications = async () => {
     try {
       const response = await fetch(
         `https://cooliemate.onrender.com/api/notifications/${userId}?type=${userType}`
       );
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch notifications');
+      }
+
       const data = await response.json();
 
-      if (data.success) {
-        const newNotifications = data.notifications;
-        
+      if (data.success && data.data) {
+        // Backend returns array of bookings as notifications for porters
+        const formattedNotifications = data.data.map((booking) => ({
+          _id: booking._id,
+          title: `Booking from ${booking.passengerName}`,
+          message: `${booking.numberOfBags} bags, ${booking.weight}kg - ₹${booking.totalPrice}`,
+          type: 'booking_created',
+          bookingId: booking._id,
+          status: booking.status,
+          createdAt: booking.createdAt,
+          isRead: booking.status !== 'pending', // Treat non-pending as read
+          priority: booking.isPriority ? 'high' : 'normal',
+          passengerName: booking.passengerName,
+          phone: booking.phone,
+          trainNo: booking.trainNo,
+          coachNo: booking.coachNo,
+          station: booking.station,
+          numberOfBags: booking.numberOfBags,
+          weight: booking.weight,
+          totalPrice: booking.totalPrice,
+          notes: booking.notes
+        }));
+
         // Check for new unread notifications
-        const newUnread = newNotifications.filter(n => !n.isRead && !n.isSoundPlayed);
+        const unreadNotifications = formattedNotifications.filter(n => n.status === 'pending');
         
-        if (newUnread.length > 0) {
+        if (unreadNotifications.length > 0 && notifications.length < unreadNotifications.length) {
           playNotificationSound();
-          // Show browser notification if permitted
-          showBrowserNotification(newUnread[0]);
+          showBrowserNotification(unreadNotifications[0]);
         }
 
-        setNotifications(newNotifications);
-        setUnreadCount(data.unreadCount);
+        setNotifications(formattedNotifications);
+        setUnreadCount(data.count || unreadNotifications.length);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -96,68 +120,30 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
     requestNotificationPermission();
   }, []);
 
-  const markAsRead = async (notificationId) => {
-    try {
-      await fetch(
-        `https://cooliemate.onrender.com/api/notifications/${notificationId}/read`,
-        { method: 'PATCH' }
-      );
-      
-      setNotifications(prev =>
-        prev.map(n =>
-          n._id === notificationId ? { ...n, isRead: true } : n
-        )
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      await fetch(
-        `https://cooliemate.onrender.com/api/notifications/${userId}/read-all`,
-        { method: 'PATCH' }
-      );
-      
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, isRead: true }))
-      );
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-    }
-  };
-
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'booking_accepted':
+  const getNotificationIcon = (type, status) => {
+    switch (status) {
+      case 'accepted':
         return <CheckCircle2 className="w-5 h-5 text-green-600" />;
-      case 'booking_declined':
+      case 'declined':
         return <XCircle className="w-5 h-5 text-red-600" />;
-      case 'booking_created':
-        return <Bell className="w-5 h-5 text-blue-600" />;
-      case 'booking_completed':
+      case 'completed':
         return <CheckCircle2 className="w-5 h-5 text-green-600" />;
-      case 'review_request':
-        return <Star className="w-5 h-5 text-yellow-600" />;
+      case 'pending':
+        return <Package className="w-5 h-5 text-blue-600" />;
       default:
         return <Bell className="w-5 h-5 text-gray-600" />;
     }
   };
 
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case 'booking_accepted':
-      case 'booking_completed':
+  const getNotificationColor = (status) => {
+    switch (status) {
+      case 'accepted':
+      case 'completed':
         return 'bg-green-50 border-green-200';
-      case 'booking_declined':
+      case 'declined':
         return 'bg-red-50 border-red-200';
-      case 'booking_created':
+      case 'pending':
         return 'bg-blue-50 border-blue-200';
-      case 'review_request':
-        return 'bg-yellow-50 border-yellow-200';
       default:
         return 'bg-gray-50 border-gray-200';
     }
@@ -202,25 +188,13 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
                   <Badge variant="secondary">{unreadCount}</Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={markAllAsRead}
-                    className="text-xs"
-                  >
-                    Mark all read
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
 
             {/* Notifications List */}
@@ -234,27 +208,49 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
                 notifications.map((notification) => (
                   <div
                     key={notification._id}
-                    className={`p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors ${
-                      !notification.isRead ? 'bg-primary/5' : ''
-                    } ${getNotificationColor(notification.type)}`}
-                    onClick={() => markAsRead(notification._id)}
+                    className={`p-4 border-b hover:bg-muted/50 transition-colors ${
+                      notification.status === 'pending' ? 'bg-primary/5' : ''
+                    } ${getNotificationColor(notification.status)}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-1 flex-shrink-0">
-                        {getNotificationIcon(notification.type)}
+                        {getNotificationIcon(notification.type, notification.status)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <h4 className="font-semibold text-sm">
                             {notification.title}
                           </h4>
-                          {!notification.isRead && (
+                          {notification.status === 'pending' && (
                             <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1" />
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
                           {notification.message}
                         </p>
+                        
+                        {/* Booking Details */}
+                        <div className="text-xs space-y-1 mb-2 bg-white/50 p-2 rounded">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Train:</span>
+                            <span className="font-medium">{notification.trainNo}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Coach:</span>
+                            <span className="font-medium">{notification.coachNo}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Phone:</span>
+                            <span className="font-medium">{notification.phone}</span>
+                          </div>
+                          {notification.notes && (
+                            <div className="mt-1">
+                              <span className="text-muted-foreground">Notes:</span>
+                              <p className="text-xs mt-1">{notification.notes}</p>
+                            </div>
+                          )}
+                        </div>
+
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Clock className="w-3 h-3 text-muted-foreground" />
@@ -267,14 +263,10 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
                               Urgent
                             </Badge>
                           )}
+                          <Badge variant="outline" className="text-xs">
+                            {notification.status}
+                          </Badge>
                         </div>
-                        {notification.bookingId && (
-                          <div className="mt-2">
-                            <Badge variant="outline" className="text-xs font-mono">
-                              {notification.bookingId}
-                            </Badge>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -289,12 +281,9 @@ const NotificationCenter = ({ userId, userType = "passenger" }) => {
                   variant="ghost"
                   size="sm"
                   className="text-xs"
-                  onClick={() => {
-                    setIsOpen(false);
-                    // Navigate to notifications page if you have one
-                  }}
+                  onClick={() => setIsOpen(false)}
                 >
-                  View all notifications
+                  Close notifications
                 </Button>
               </div>
             )}

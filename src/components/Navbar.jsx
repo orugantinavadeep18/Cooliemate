@@ -63,12 +63,12 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Top Bar */}
-        <div className="md:hidden sticky flex items-center justify-center px-4 h-16 bg-white border-b border-gray-200 shadow-sm relative">
+          {/* Mobile Top Bar */}
+        <div className="md:hidden sticky top-0 flex items-center justify-center px-4 h-14 bg-white border-b border-gray-200 shadow-sm z-40">
           {/* Logo + Title - Centered */}
           <div className="flex items-center space-x-2">
-            <img src="/logo.png" alt="CoolieMate Logo" className="h-10 w-10" />
-            <span className="text-xl font-bold text-[#e63946]">CoolieMate</span>
+            <img src="/logo.png" alt="CoolieMate Logo" className="h-9 w-9" />
+            <span className="text-lg font-bold text-[#e63946]">CoolieMate</span>
           </div>
 
           {/* Notification - Absolute positioned */}
@@ -80,9 +80,9 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Footer Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50">
-        <div className="flex items-center justify-around px-2 py-2">
+ {/* Mobile Bottom Navigation - Only shows on mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg z-50">
+        <div className="flex items-center justify-around px-1 py-2">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;
@@ -91,14 +91,20 @@ const Navbar = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className="flex flex-col items-center justify-center flex-1 py-2"
+                className={`flex flex-col items-center justify-center flex-1 py-2 px-1 min-w-0 rounded-lg transition-colors ${
+                  isActive ? 'bg-red-100' : 'hover:bg-red-50'
+                }`}
               >
                 <Icon 
-                  size={22} 
-                  className={`${isActive ? 'text-[#0b0a0a]' : 'text-black'}`}
+                  size={24}
+                  className={`flex-shrink-0 ${
+                    isActive ? 'text-[#e63946]' : 'text-gray-600'
+                  }`}
                 />
                 <span 
-                  className={`text-xs mt-1 ${isActive ? 'text-[#e91532] font-semibold' : 'text-red-500'}`}
+                  className={`text-xs mt-1 font-medium truncate whitespace-nowrap max-w-full ${
+                    isActive ? 'text-[#e63946]' : 'text-gray-600'
+                  }`}
                 >
                   {link.name}
                 </span>
@@ -107,6 +113,11 @@ const Navbar = () => {
           })}
         </div>
       </div>
+
+      {/* Spacer for mobile bottom nav - prevents content from being hidden */}
+      {/* <div className="md:hidden h-28" /> */}
+      {/* Spacer for mobile bottom nav */}
+      {/* <div className="md:hidden h-20" /> */}
     </>
   );
 };
