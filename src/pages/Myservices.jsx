@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, Search, Package, Loader2 } from "lucide-react";
-
+import NaNvbar from "@/components/Navbar";
 const API_BASE = 'https://cooliemate.onrender.com';
 
 const MyBookings = () => {
@@ -61,6 +61,7 @@ const MyBookings = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+        <NaNvbar />
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
