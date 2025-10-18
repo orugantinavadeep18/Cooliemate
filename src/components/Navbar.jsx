@@ -133,10 +133,12 @@ const Navbar = () => {
     <div className="flex items-center justify-center px-4 h-16">
       <Link to="/" className="flex items-center space-x-2">
         <img src="/logo.png" alt="CoolieMate Logo" className="h-10 w-10" />
+        <div className="flex flex-col">
         <span className="text-xl font-black bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
           CoolieMate
         </span>
         <span className="text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
+        </div>
       </Link>
     </div>
   </motion.div>
