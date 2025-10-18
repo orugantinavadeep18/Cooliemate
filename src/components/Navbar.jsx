@@ -136,6 +136,7 @@ const Navbar = () => {
         <span className="text-xl font-black bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
           CoolieMate
         </span>
+        <span className="text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
       </Link>
     </div>
   </motion.div>
