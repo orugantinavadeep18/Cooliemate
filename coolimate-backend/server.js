@@ -843,6 +843,43 @@ app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) =>
     });
   }
 });
+// Get bookings by phone number (for guest users)
+app.get('/api/bookings/phone/:phone', async (req, res) => {
+  try {
+    const { phone } = req.params;
+    
+    console.log('📱 Fetching bookings for phone:', phone);
+    
+    // Validate phone number
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid phone number format'
+      });
+    }
+    
+    // Find all bookings with this phone number
+    const bookings = await Booking.find({ phone: phone })
+      .sort({ createdAt: -1 })
+      .lean();
+    
+    console.log(`✅ Found ${bookings.length} bookings for phone ${phone}`);
+    
+    res.json({
+      success: true,
+      count: bookings.length,
+      data: bookings
+    });
+    
+  } catch (error) {
+    console.error('❌ Fetch Bookings by Phone Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+});
 
 // Accept/Decline Booking - UPDATED to handle MongoDB _id
 app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
