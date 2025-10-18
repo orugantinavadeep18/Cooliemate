@@ -37,6 +37,7 @@ const PorterLogin = () => {
       return;
     }
 
+    // Validation
     if (!phone || !password) {
       toast({
         title: "Missing Fields",
@@ -60,16 +61,14 @@ const PorterLogin = () => {
     try {
       console.log('📤 Attempting login with mobile number:', phone);
 
-      // Temporary workaround: Use phone as badgeNumber until backend is updated
-      // The backend currently expects badgeNumber, so we'll use phone as the identifier
       const response = await fetch(`${API_BASE}/api/porter/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          badgeNumber: phone, // Using phone as badgeNumber temporarily
-          password
+          phone: phone,
+          password: password
         })
       });
 
@@ -78,7 +77,6 @@ const PorterLogin = () => {
       if (!response.ok) {
         console.error('❌ Backend Error:', data);
         
-        // Provide more helpful error messages
         if (data.message === 'Invalid credentials') {
           throw new Error('Invalid mobile number or password. Please check your credentials or register first.');
         }
@@ -88,13 +86,21 @@ const PorterLogin = () => {
 
       console.log('✅ Login successful:', data);
 
-      // Store authentication data
+      // Store authentication data in memory
       const authData = {
         token: data.data.token,
         id: data.data.id,
         phone: data.data.phone,
         badgeNumber: data.data.badgeNumber,
-        name: data.data.name
+        name: data.data.name,
+        station: data.data.station,
+        image: data.data.image,
+        rating: data.data.rating,
+        totalTrips: data.data.totalTrips,
+        experience: data.data.experience,
+        languages: data.data.languages,
+        specialization: data.data.specialization,
+        isOnline: data.data.isOnline
       };
       
       // Store in memory (not localStorage as per restrictions)
@@ -102,7 +108,7 @@ const PorterLogin = () => {
 
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${data.data.name}!`,
+        description: `Welcome back, ${data.data.name}! You are now online.`,
       });
 
       setTimeout(() => {
@@ -144,7 +150,7 @@ const PorterLogin = () => {
           <Card className="shadow-xl border-0 bg-white overflow-hidden">
             <CardContent className="p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Badge Number Section */}
+                {/* Account Details Section */}
                 <div className="bg-blue-50 rounded-2xl p-6 space-y-5">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -174,6 +180,9 @@ const PorterLogin = () => {
                       required
                       className="h-14 text-base border-slate-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl"
                     />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Use the mobile number you registered with
+                    </p>
                   </div>
 
                   {/* Password Field */}
@@ -258,10 +267,10 @@ const PorterLogin = () => {
           <div className="text-center text-sm text-slate-500 mt-6 space-y-2">
             <p>Having trouble logging in? Contact support for assistance</p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-              <p className="text-blue-800 font-medium">📱 Current Login Method:</p>
+              <p className="text-blue-800 font-medium">📱 Login with Mobile Number</p>
               <p className="text-blue-700 text-xs mt-1">
-                Use your registered mobile number as the login ID. 
-                If you haven't registered yet, please create an account first.
+                Use your registered 10-digit mobile number and password to sign in. 
+                New porter? Register first to create your account.
               </p>
             </div>
           </div>
