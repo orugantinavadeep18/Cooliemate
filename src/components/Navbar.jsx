@@ -41,7 +41,7 @@ const Navbar = () => {
     { name: "Book Porter", path: "/", icon: Package },
     { name: "Porter Login", path: "/porter-login", icon: LogIn },
     { name: "About Us", path: "/about", icon: Info },
-    { name: "Services", path: "/my-orders", icon: ShoppingBag },
+    { name: "Services", path: "/myorders", icon: ShoppingBag },
   ];
 
   return (

@@ -10,7 +10,7 @@ import PorterLogin from "./pages/PorterLogin";
 import PorterRegistration from "./pages/porterregi";
 import PorterDashboard from "./pages/PorterDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
+import MyBookings from "./pages/Myservices";
 import AvailablePorters from "./pages/Available";
 import AboutUs from "./pages/aboutus";
 import ProfessionalLoadingScreen from "@/components/ProfessionalLoadingScreen";
@@ -57,7 +57,7 @@ const App = () => {
             <Route path="/available" element={<AvailablePorters />} />
             <Route path="/porter-registration" element={<PorterRegistration />} />
             <Route path="/about" element={<AboutUs />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/myorders" element={<MyBookings/>} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
