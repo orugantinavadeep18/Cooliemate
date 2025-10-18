@@ -340,15 +340,19 @@ const PorterDashboard = () => {
 
                 {/* Languages */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Languages:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {porterData.languages && porterData.languages.map((lang) => (
-                      <Badge key={lang} variant="secondary" className="text-xs">
-                        {lang}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+  <p className="text-xs text-muted-foreground mb-2">Languages:</p>
+  <div className="flex flex-wrap gap-2">
+    {(porterData.languages && porterData.languages.length > 0
+      ? porterData.languages
+      : ["Telugu"]
+    ).map((lang) => (
+      <Badge key={lang} variant="secondary" className="text-xs">
+        {lang}
+      </Badge>
+    ))}
+  </div>
+</div>
+
               </CardContent>
             </Card>
           </div>

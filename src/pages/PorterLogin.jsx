@@ -86,25 +86,20 @@ const PorterLogin = () => {
 
       console.log('✅ Login successful:', data);
 
-      // Store authentication data in memory
-      const authData = {
-        token: data.data.token,
-        id: data.data.id,
-        phone: data.data.phone,
-        badgeNumber: data.data.badgeNumber,
-        name: data.data.name,
-        station: data.data.station,
-        image: data.data.image,
-        rating: data.data.rating,
-        totalTrips: data.data.totalTrips,
-        experience: data.data.experience,
-        languages: data.data.languages,
-        specialization: data.data.specialization,
-        isOnline: data.data.isOnline
-      };
-      
-      // Store in memory (not localStorage as per restrictions)
-      window.porterAuth = authData;
+      // Store authentication data in localStorage for persistent login
+      localStorage.setItem('porterToken', data.data.token);
+      localStorage.setItem('porterId', data.data.id);
+      localStorage.setItem('porterPhone', data.data.phone);
+      localStorage.setItem('porterBadgeNumber', data.data.badgeNumber);
+      localStorage.setItem('porterName', data.data.name);
+      localStorage.setItem('porterStation', data.data.station);
+      localStorage.setItem('porterImage', data.data.image);
+      localStorage.setItem('porterRating', data.data.rating);
+      localStorage.setItem('porterTotalTrips', data.data.totalTrips);
+      localStorage.setItem('porterExperience', data.data.experience || '1 year');
+      localStorage.setItem('porterSpecialization', data.data.specialization || 'General Luggage');
+      localStorage.setItem('porterLanguages', JSON.stringify(data.data.languages || ['English', 'Hindi']));
+      localStorage.setItem('porterIsOnline', data.data.isOnline);
 
       toast({
         title: "Login Successful",
