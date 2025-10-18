@@ -32,6 +32,7 @@ const AdminDashboard = () => {
   const [portersLoading, setPortersLoading] = useState(false);
   const [dateRange, setDateRange] = useState('all');
   const [activeTab, setActiveTab] = useState('analytics');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -61,6 +62,7 @@ const AdminDashboard = () => {
       const data = await response.json();
       
       if (data.success) {
+        console.log('Fetched porters:', data.porters);
         setPorters(data.porters);
       }
     } catch (error) {
@@ -70,28 +72,45 @@ const AdminDashboard = () => {
     }
   };
 
-  const deletePorter = async (porterId) => {
-    if (!window.confirm('Are you sure you want to delete this porter? This action cannot be undone.')) {
+  const deletePorter = async (porter) => {
+    // Validate porter object
+    if (!porter || !porter._id) {
+      console.error('Invalid porter object:', porter);
+      alert('Error: Porter ID not found');
+      return;
+    }
+
+    const porterId = porter._id;
+    const porterName = porter.name;
+
+    if (!window.confirm(`Are you sure you want to delete ${porterName}? This action cannot be undone.`)) {
       return;
     }
 
     try {
+      setDeletingId(porterId);
+      console.log('Attempting to delete porter with ID:', porterId);
+
       const response = await fetch(`${API_BASE}/api/admin/porter/${porterId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       const data = await response.json();
       
       if (data.success) {
-        // Remove porter from local state
-        setPorters(porters.filter(porter => porter._id !== porterId));
-        alert('Porter deleted successfully!');
+        setPorters(porters.filter(p => p._id !== porterId));
+        alert(`Porter ${porterName} deleted successfully!`);
       } else {
-        alert('Failed to delete porter: ' + data.message);
+        alert(`Failed to delete porter: ${data.message}`);
       }
     } catch (error) {
       console.error('Error deleting porter:', error);
-      alert('Error deleting porter. Please try again.');
+      alert(`Error deleting porter: ${error.message}`);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -526,11 +545,12 @@ const AdminDashboard = () => {
                               <Button
                                 variant="destructive"
                                 size="sm"
-                                onClick={() => deletePorter(porter._id)}
+                                onClick={() => deletePorter(porter)}
+                                disabled={deletingId === porter._id}
                                 className="flex items-center gap-2"
                               >
                                 <Trash2 className="w-4 h-4" />
-                                Delete
+                                {deletingId === porter._id ? 'Deleting...' : 'Delete'}
                               </Button>
                             </td>
                           </tr>
