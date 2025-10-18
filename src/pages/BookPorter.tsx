@@ -477,9 +477,9 @@ const BookPorter = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-4 pb-8">
         <Card className="max-w-2xl mx-auto shadow-elevated">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle className="text-2xl md:text-3xl text-center">
               Book Your Porter
             </CardTitle>

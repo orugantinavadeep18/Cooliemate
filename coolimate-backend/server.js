@@ -273,11 +273,47 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// Debug endpoint to check specific porter
+app.get('/api/porter/debug/:identifier', async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    
+    const porter = await Porter.findOne({
+      $or: [
+        { phone: identifier },
+        { badgeNumber: identifier }
+      ]
+    });
+    
+    if (!porter) {
+      return res.json({
+        success: false,
+        message: 'Porter not found',
+        identifier: identifier
+      });
+    }
+    
+    res.json({
+      success: true,
+      porter: {
+        name: porter.name,
+        phone: porter.phone,
+        badgeNumber: porter.badgeNumber,
+        station: porter.station,
+        isOnline: porter.isOnline,
+        isVerified: porter.isVerified
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ADDED: Debug endpoint to check porter online status
 app.get('/api/porters/debug', async (req, res) => {
   try {
     const allPorters = await Porter.find({})
-      .select('name badgeNumber station isOnline isVerified lastSeen')
+      .select('name phone badgeNumber station isOnline isVerified lastSeen')
       .lean();
     
     const onlinePorters = allPorters.filter(p => p.isOnline);
@@ -289,6 +325,7 @@ app.get('/api/porters/debug', async (req, res) => {
       offline: allPorters.length - onlinePorters.length,
       porters: allPorters.map(p => ({
         name: p.name,
+        phone: p.phone,
         badgeNumber: p.badgeNumber,
         station: p.station,
         isOnline: p.isOnline,
@@ -392,21 +429,47 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   }
 });
 
-// Login Porter - UPDATED with better logging
+// Login Porter - UPDATED to use mobile number with backward compatibility
 app.post('/api/porter/login', async (req, res) => {
   try {
-    const { badgeNumber, password } = req.body;
+    const { phone, badgeNumber, password } = req.body;
 
-    console.log('🔐 Login attempt for badge:', badgeNumber);
+    // Support both old (badgeNumber) and new (phone) login methods
+    const loginField = phone || badgeNumber;
+    const loginType = phone ? 'mobile' : 'badge';
 
-    if (!badgeNumber || !password) {
+    console.log(`🔐 Login attempt for ${loginType}:`, loginField);
+
+    if (!loginField || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Badge number and password are required'
+        message: 'Mobile number (or badge number) and password are required'
       });
     }
 
-    const porter = await Porter.findOne({ badgeNumber });
+    // Validate phone number format if using phone login
+    if (phone && !/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid 10-digit mobile number'
+      });
+    }
+
+    // Find porter by phone or badgeNumber
+    // Priority: phone number first, then badgeNumber
+    let porter = null;
+    
+    if (phone) {
+      // Try to find by phone number first
+      porter = await Porter.findOne({ phone: loginField });
+      console.log(`🔍 Searching by phone ${loginField}:`, porter ? 'Found' : 'Not found');
+    }
+    
+    if (!porter) {
+      // Fallback to badgeNumber search
+      porter = await Porter.findOne({ badgeNumber: loginField });
+      console.log(`🔍 Searching by badgeNumber ${loginField}:`, porter ? 'Found' : 'Not found');
+    }
     if (!porter) {
       console.log('❌ Porter not found');
       return res.status(401).json({
@@ -877,6 +940,142 @@ app.post('/api/reviews', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
+      error: error.message
+    });
+  }
+});
+
+// Analytics endpoint for admin dashboard
+app.get('/api/analytics/dashboard', async (req, res) => {
+  try {
+    console.log('📊 Fetching analytics data...');
+    
+    // Get basic statistics
+    const totalPorters = await Porter.countDocuments();
+    const onlinePorters = await Porter.countDocuments({ isOnline: true });
+    const totalBookings = await Booking.countDocuments();
+    const completedBookings = await Booking.countDocuments({ status: 'completed' });
+    
+    // Get recent bookings
+    const recentBookings = await Booking.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('_id passengerName phone station trainNo status totalPrice createdAt')
+      .lean();
+    
+    // Get bookings by status
+    const bookingsByStatus = await Booking.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+    
+    const statusCounts = {};
+    bookingsByStatus.forEach(item => {
+      statusCounts[item._id] = item.count;
+    });
+    
+    // Get top rated porters (mock data for now)
+    const topPorters = await Porter.find({ isVerified: true })
+      .sort({ rating: -1 })
+      .limit(5)
+      .select('name rating totalTrips')
+      .lean();
+    
+    // Mock analytics data
+    const analytics = {
+      overview: {
+        totalVisits: 1250,
+        uniqueVisitors: 890,
+        totalBookings: totalBookings,
+        conversionRate: '12.5%',
+        totalRevenue: 45000
+      },
+      bookingsByStatus: {
+        completed: statusCounts.completed || 0,
+        accepted: statusCounts.accepted || 0,
+        pending: statusCounts.pending || 0,
+        declined: statusCounts.declined || 0
+      },
+      deviceStats: {
+        mobile: 850,
+        desktop: 300,
+        tablet: 100
+      },
+      topPorters: topPorters.map(porter => ({
+        _id: porter._id,
+        porterName: porter.name,
+        avgRating: porter.rating,
+        totalReviews: porter.totalTrips
+      })),
+      recentBookings: recentBookings.map(booking => ({
+        id: booking._id.toString().substring(0, 8),
+        passengerName: booking.passengerName,
+        phone: booking.phone,
+        station: booking.station,
+        trainNo: booking.trainNo,
+        status: booking.status,
+        totalPrice: booking.totalPrice,
+        requestedAt: booking.createdAt
+      }))
+    };
+    
+    console.log('✅ Analytics data fetched successfully');
+    
+    res.json({
+      success: true,
+      data: analytics
+    });
+    
+  } catch (error) {
+    console.error('❌ Analytics Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching analytics data',
+      error: error.message
+    });
+  }
+});
+
+// Admin endpoint to delete porter
+app.delete('/api/admin/porter/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`🗑️ Admin attempting to delete porter: ${id}`);
+    
+    // Find the porter first
+    const porter = await Porter.findById(id);
+    if (!porter) {
+      return res.status(404).json({
+        success: false,
+        message: 'Porter not found'
+      });
+    }
+    
+    // Delete the porter
+    await Porter.findByIdAndDelete(id);
+    
+    console.log(`✅ Porter ${porter.name} (${porter.badgeNumber}) deleted successfully`);
+    
+    res.json({
+      success: true,
+      message: 'Porter deleted successfully',
+      deletedPorter: {
+        name: porter.name,
+        badgeNumber: porter.badgeNumber,
+        phone: porter.phone
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Delete Porter Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during deletion',
       error: error.message
     });
   }

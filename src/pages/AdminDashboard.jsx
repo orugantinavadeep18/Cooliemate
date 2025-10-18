@@ -14,18 +14,28 @@ import {
   Star,
   Eye,
   RefreshCw,
-  Download
+  Download,
+  Trash2,
+  UserCheck,
+  UserX,
+  Phone,
+  Hash,
+  MapPin
 } from "lucide-react";
 
 const API_BASE = 'https://cooliemate.onrender.com';
 
 const AdminDashboard = () => {
   const [analytics, setAnalytics] = useState(null);
+  const [porters, setPorters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [portersLoading, setPortersLoading] = useState(false);
   const [dateRange, setDateRange] = useState('all');
+  const [activeTab, setActiveTab] = useState('analytics');
 
   useEffect(() => {
     fetchAnalytics();
+    fetchPorters();
   }, [dateRange]);
 
   const fetchAnalytics = async () => {
@@ -41,6 +51,47 @@ const AdminDashboard = () => {
       console.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPorters = async () => {
+    try {
+      setPortersLoading(true);
+      const response = await fetch(`${API_BASE}/api/porters/debug`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setPorters(data.porters);
+      }
+    } catch (error) {
+      console.error('Error fetching porters:', error);
+    } finally {
+      setPortersLoading(false);
+    }
+  };
+
+  const deletePorter = async (porterId) => {
+    if (!window.confirm('Are you sure you want to delete this porter? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/admin/porter/${porterId}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Remove porter from local state
+        setPorters(porters.filter(porter => porter._id !== porterId));
+        alert('Porter deleted successfully!');
+      } else {
+        alert('Failed to delete porter: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error deleting porter:', error);
+      alert('Error deleting porter. Please try again.');
     }
   };
 
@@ -109,8 +160,31 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 mb-8 bg-muted p-1 rounded-lg w-fit">
+          <Button
+            variant={activeTab === 'analytics' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('analytics')}
+            className="px-6"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Analytics
+          </Button>
+          <Button
+            variant={activeTab === 'porters' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('porters')}
+            className="px-6"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Manage Porters
+          </Button>
+        </div>
+
+        {/* Analytics Tab Content */}
+        {activeTab === 'analytics' && (
+          <>
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
@@ -267,50 +341,208 @@ const AdminDashboard = () => {
           </Card>
         )}
 
-        {/* Recent Bookings */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>Recent Bookings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4">Booking ID</th>
-                    <th className="text-left py-3 px-4">Passenger</th>
-                    <th className="text-left py-3 px-4">Phone</th>
-                    <th className="text-left py-3 px-4">Station</th>
-                    <th className="text-left py-3 px-4">Train</th>
-                    <th className="text-left py-3 px-4">Status</th>
-                    <th className="text-left py-3 px-4">Amount</th>
-                    <th className="text-left py-3 px-4">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analytics.recentBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4 font-mono text-sm">{booking.id}</td>
-                      <td className="py-3 px-4 font-medium">{booking.passengerName}</td>
-                      <td className="py-3 px-4">{booking.phone}</td>
-                      <td className="py-3 px-4">{booking.station}</td>
-                      <td className="py-3 px-4">{booking.trainNo}</td>
-                      <td className="py-3 px-4">
-                        <Badge className={getStatusColor(booking.status)}>
-                          {booking.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4 font-bold text-primary">₹{booking.totalPrice}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {new Date(booking.requestedAt).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Recent Bookings */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle>Recent Bookings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">Booking ID</th>
+                        <th className="text-left py-3 px-4">Passenger</th>
+                        <th className="text-left py-3 px-4">Phone</th>
+                        <th className="text-left py-3 px-4">Station</th>
+                        <th className="text-left py-3 px-4">Train</th>
+                        <th className="text-left py-3 px-4">Status</th>
+                        <th className="text-left py-3 px-4">Amount</th>
+                        <th className="text-left py-3 px-4">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.recentBookings.map((booking) => (
+                        <tr key={booking.id} className="border-b hover:bg-muted/50">
+                          <td className="py-3 px-4 font-mono text-sm">{booking.id}</td>
+                          <td className="py-3 px-4 font-medium">{booking.passengerName}</td>
+                          <td className="py-3 px-4">{booking.phone}</td>
+                          <td className="py-3 px-4">{booking.station}</td>
+                          <td className="py-3 px-4">{booking.trainNo}</td>
+                          <td className="py-3 px-4">
+                            <Badge className={getStatusColor(booking.status)}>
+                              {booking.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 font-bold text-primary">₹{booking.totalPrice}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
+                            {new Date(booking.requestedAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Porters Management Tab Content */}
+        {activeTab === 'porters' && (
+          <div className="space-y-6">
+            {/* Porters Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Manage Porters</h2>
+                <p className="text-muted-foreground">View and manage registered porters</p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={fetchPorters} disabled={portersLoading}>
+                  <RefreshCw className={`w-4 h-4 mr-2 ${portersLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Porters Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Porters</p>
+                      <p className="text-2xl font-bold">{porters.length}</p>
+                    </div>
+                    <Users className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Online</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {porters.filter(p => p.isOnline).length}
+                      </p>
+                    </div>
+                    <UserCheck className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Offline</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {porters.filter(p => !p.isOnline).length}
+                      </p>
+                    </div>
+                    <UserX className="w-8 h-8 text-red-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Verified</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {porters.filter(p => p.isVerified).length}
+                      </p>
+                    </div>
+                    <CheckCircle2 className="w-8 h-8 text-purple-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Porters List */}
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle>All Porters</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {portersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                    <span>Loading porters...</span>
+                  </div>
+                ) : porters.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No porters found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Name</th>
+                          <th className="text-left py-3 px-4">Phone</th>
+                          <th className="text-left py-3 px-4">Badge</th>
+                          <th className="text-left py-3 px-4">Station</th>
+                          <th className="text-left py-3 px-4">Status</th>
+                          <th className="text-left py-3 px-4">Last Seen</th>
+                          <th className="text-left py-3 px-4">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {porters.map((porter) => (
+                          <tr key={porter._id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-4 font-medium">{porter.name}</td>
+                            <td className="py-3 px-4 flex items-center gap-2">
+                              <Phone className="w-4 h-4 text-muted-foreground" />
+                              {porter.phone || 'N/A'}
+                            </td>
+                            <td className="py-3 px-4 flex items-center gap-2">
+                              <Hash className="w-4 h-4 text-muted-foreground" />
+                              {porter.badgeNumber}
+                            </td>
+                            <td className="py-3 px-4 flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-muted-foreground" />
+                              {porter.station}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex gap-2">
+                                <Badge 
+                                  className={porter.isOnline ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
+                                >
+                                  {porter.isOnline ? 'Online' : 'Offline'}
+                                </Badge>
+                                {porter.isVerified && (
+                                  <Badge className="bg-blue-100 text-blue-700">
+                                    Verified
+                                  </Badge>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-sm text-muted-foreground">
+                              {new Date(porter.lastSeen).toLocaleString()}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => deletePorter(porter._id)}
+                                className="flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

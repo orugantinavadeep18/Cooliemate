@@ -244,7 +244,7 @@ const PorterRegistration = () => {
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                       <Phone className="w-4 h-4 text-slate-500" />
-                      Phone Number *
+                      Mobile Number * (Login ID)
                     </Label>
                     <Input
                       id="phone"
@@ -254,11 +254,14 @@ const PorterRegistration = () => {
                       maxLength="10"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="10 digit mobile number"
+                      placeholder="10 digit mobile number (used for login)"
                       disabled={isSubmitting}
                       required
                       className="h-12 text-base border-slate-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl"
                     />
+                    <p className="text-xs text-blue-600 font-medium">
+                      This mobile number will be used for login
+                    </p>
                   </div>
                 </div>
 
@@ -277,7 +280,7 @@ const PorterRegistration = () => {
                   <div className="space-y-2">
                     <Label htmlFor="badgeNumber" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                       <Hash className="w-4 h-4 text-slate-500" />
-                      Coolie Badge Number *
+                      Coolie Badge Number * (Reference Only)
                     </Label>
                     <Input
                       id="badgeNumber"
@@ -289,6 +292,9 @@ const PorterRegistration = () => {
                       required
                       className="h-12 text-base border-slate-300 bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-xl"
                     />
+                    <p className="text-xs text-green-600 font-medium">
+                      For identification purposes only
+                    </p>
                   </div>
 
                   {/* Station */}

@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
-import { Eye, EyeOff, Loader2, User, Lock, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, User, Lock, Sparkles, Phone } from "lucide-react";
 
 const API_BASE = 'https://cooliemate.onrender.com';
 
@@ -17,18 +17,39 @@ const PorterLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState({
-    badgeNumber: "",
+    phone: "",
     password: "",
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { badgeNumber, password } = credentials;
+    const { phone, password } = credentials;
 
-    if (!badgeNumber || !password) {
+    // Check for admin login
+    if (phone === "9494704280" && password === "CooliemateDN") {
+      toast({
+        title: "Admin Login Successful",
+        description: "Welcome to Admin Dashboard!",
+      });
+      setTimeout(() => {
+        navigate("/admin-dashboard");
+      }, 1000);
+      return;
+    }
+
+    if (!phone || !password) {
       toast({
         title: "Missing Fields",
-        description: "Please enter both badge number and password",
+        description: "Please enter both mobile number and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(phone)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid 10-digit mobile number",
         variant: "destructive",
       });
       return;
@@ -37,15 +58,17 @@ const PorterLogin = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('📤 Attempting login with badge number:', badgeNumber);
+      console.log('📤 Attempting login with mobile number:', phone);
 
+      // Temporary workaround: Use phone as badgeNumber until backend is updated
+      // The backend currently expects badgeNumber, so we'll use phone as the identifier
       const response = await fetch(`${API_BASE}/api/porter/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          badgeNumber,
+          badgeNumber: phone, // Using phone as badgeNumber temporarily
           password
         })
       });
@@ -53,6 +76,13 @@ const PorterLogin = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('❌ Backend Error:', data);
+        
+        // Provide more helpful error messages
+        if (data.message === 'Invalid credentials') {
+          throw new Error('Invalid mobile number or password. Please check your credentials or register first.');
+        }
+        
         throw new Error(data.message || 'Login failed');
       }
 
@@ -62,6 +92,7 @@ const PorterLogin = () => {
       const authData = {
         token: data.data.token,
         id: data.data.id,
+        phone: data.data.phone,
         badgeNumber: data.data.badgeNumber,
         name: data.data.name
       };
@@ -124,19 +155,21 @@ const PorterLogin = () => {
                     </h2>
                   </div>
 
-                  {/* Badge Number Field */}
+                  {/* Mobile Number Field */}
                   <div className="space-y-2">
-                    <Label htmlFor="badgeNumber" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                      <User className="w-4 h-4 text-slate-500" />
-                      Badge Number *
+                    <Label htmlFor="phone" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-slate-500" />
+                      Mobile Number *
                     </Label>
                     <Input
-                      id="badgeNumber"
-                      value={credentials.badgeNumber}
+                      id="phone"
+                      type="tel"
+                      value={credentials.phone}
                       onChange={(e) =>
-                        setCredentials({ ...credentials, badgeNumber: e.target.value })
+                        setCredentials({ ...credentials, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
                       }
-                      placeholder="Enter your badge number"
+                      placeholder="Enter your 10-digit mobile number"
+                      maxLength={10}
                       disabled={isSubmitting}
                       required
                       className="h-14 text-base border-slate-300 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl"
@@ -222,9 +255,16 @@ const PorterLogin = () => {
           </Card>
 
           {/* Help Text */}
-          <p className="text-center text-sm text-slate-500 mt-6">
-            Having trouble logging in? Contact support for assistance
-          </p>
+          <div className="text-center text-sm text-slate-500 mt-6 space-y-2">
+            <p>Having trouble logging in? Contact support for assistance</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+              <p className="text-blue-800 font-medium">📱 Current Login Method:</p>
+              <p className="text-blue-700 text-xs mt-1">
+                Use your registered mobile number as the login ID. 
+                If you haven't registered yet, please create an account first.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

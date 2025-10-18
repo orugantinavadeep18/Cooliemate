@@ -12,7 +12,7 @@ import { Loader2, CheckCircle2, IndianRupee, Train, MapPin, Calendar, Clock, Use
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
+import Footer from "@/pages/Footer";
 const BookPorter = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -656,6 +656,7 @@ const BookPorter = () => {
           </Card>
         </motion.div>
       </div>
+      <Footer />
     </div>
   );
 };
