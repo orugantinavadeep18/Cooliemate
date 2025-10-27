@@ -38,7 +38,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Home", path: "/", icon: Home },
-    { name: "Book Porter", path: "/", icon: Package },
+    { name: "Book Porter", path: "/book", icon: Package },
     { name: "Porter Login", path: "/porter-login", icon: LogIn },
     { name: "About Us", path: "/about", icon: Info },
     { name: "Services", path: "/myorders", icon: ShoppingBag },
