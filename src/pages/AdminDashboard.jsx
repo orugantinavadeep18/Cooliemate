@@ -22,6 +22,8 @@ import {
   Hash,
   MapPin
 } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "./Footer";
 
 const API_BASE = 'https://cooliemate.onrender.com';
 
@@ -160,6 +162,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-primary/5">
+      <Navbar/>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -564,6 +567,7 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+      <Footer/>
     </div>
   );
 };

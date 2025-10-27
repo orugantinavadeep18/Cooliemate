@@ -40,8 +40,9 @@ const Navbar = () => {
     { name: "Home", path: "/", icon: Home },
     { name: "Book Porter", path: "/book", icon: Package },
     { name: "Porter Login", path: "/porter-login", icon: LogIn },
-    { name: "About Us", path: "/about", icon: Info },
     { name: "Services", path: "/myorders", icon: ShoppingBag },
+    { name: "About Us", path: "/about", icon: Info },
+    
   ];
 
   return (
@@ -57,27 +58,27 @@ const Navbar = () => {
             : 'bg-white border-b border-gray-100'
         }`}
       >
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-20">
+        <div className="container mx-auto px-2 lg:px-6">
+          <div className="flex items-center justify-between h-20 gap-2">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/" className="flex items-center space-x-2 lg:space-x-3 group flex-shrink-0">
               <motion.img 
                 whileHover={{ rotate: 360, scale: 1.1 }}
                 transition={{ duration: 0.6 }}
                 src="/logo.png" 
                 alt="CoolieMate Logo" 
-                className="h-14 w-14 object-contain drop-shadow-lg" 
+                className="h-10 w-10 lg:h-14 lg:w-14 object-contain drop-shadow-lg" 
               />
               <div className="flex flex-col">
-                <span className="text-3xl font-black bg-gradient-to-r from-red-600 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                <span className="text-xl lg:text-3xl font-black bg-gradient-to-r from-red-600 via-red-500 to-orange-500 bg-clip-text text-transparent">
                   CoolieMate
                 </span>
-                <span className="text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
+                <span className="text-[10px] lg:text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
               </div>
             </Link>
 
             {/* Navigation Links */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 lg:space-x-2 flex-wrap justify-end flex-1">
               {navLinks.map((link, index) => {
                 const isActive = location.pathname === link.path;
                 return (
@@ -90,8 +91,8 @@ const Navbar = () => {
                     <Link to={link.path}>
                       <Button
                         variant={isActive ? "default" : "ghost"}
-                        size="lg"
-                        className={`font-semibold transition-all duration-300 ${
+                        size="sm"
+                        className={`font-semibold transition-all duration-300 text-xs lg:text-sm px-2 lg:px-4 whitespace-nowrap ${
                           isActive 
                             ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg hover:shadow-red-500/50 hover:scale-105' 
                             : 'hover:bg-red-50 hover:text-red-600'
@@ -119,31 +120,29 @@ const Navbar = () => {
       </motion.nav>
 
       {/* Mobile Navbar */}
-<div className="md:hidden">
-  {/* Top Bar */}
-  <motion.div
-    initial={{ y: -100 }}
-    animate={{ y: 0 }}
-    className={`sticky top-0 z-50 transition-all duration-300 ${
-      scrolled
-        ? 'bg-white/95 backdrop-blur-lg shadow-xl'
-        : 'bg-white shadow-md'
-    }`}
-  >
-    <div className="flex items-center justify-center px-4 h-16">
-      <Link to="/" className="flex items-center space-x-2">
-        <img src="/logo.png" alt="CoolieMate Logo" className="h-10 w-10" />
-        <div className="flex flex-col">
-        <span className="text-xl font-black bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
-          CoolieMate
-        </span>
-        <span className="text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
-        </div>
-      </Link>
-    </div>
-  </motion.div>
-
-
+      <div className="md:hidden">
+        {/* Top Bar */}
+        <motion.div
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          className={`sticky top-0 z-50 transition-all duration-300 ${
+            scrolled
+              ? 'bg-white/95 backdrop-blur-lg shadow-xl'
+              : 'bg-white shadow-md'
+          }`}
+        >
+          <div className="flex items-center justify-center px-4 h-16">
+            <Link to="/" className="flex items-center space-x-2">
+              <img src="/logo.png" alt="CoolieMate Logo" className="h-10 w-10" />
+              <div className="flex flex-col">
+                <span className="text-xl font-black bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
+                  CoolieMate
+                </span>
+                <span className="text-xs text-gray-500 font-medium -mt-1">Premium Porter Service</span>
+              </div>
+            </Link>
+          </div>
+        </motion.div>
 
         {/* Mobile Menu Overlay */}
         {/* <AnimatePresence>
@@ -176,8 +175,6 @@ const Navbar = () => {
                     </Link>
                   );
                 })}
-                
-               
               </div>
             </motion.div>
           )}
@@ -228,4 +225,5 @@ const Navbar = () => {
     </>
   );
 };
+
 export default Navbar;

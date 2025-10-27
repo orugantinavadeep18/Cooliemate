@@ -131,19 +131,20 @@ const AboutUs = () => {
         "Visionary leader who identified the gap in railway luggage assistance and conceptualized CoolieMate as a solution to a nationwide problem.",
     },
     {
+      name: "Navdeep",
+      role: "Co-Founder & CTO",
+      img: "/CTO.jpg",
+      description:
+        "Head of Technology, architecting the robust platform that powers real-time tracking, secure payments, and smooth booking experiences.",
+    },
+    {
       name: "Sahithya",
       role: "Co-Founder & COO",
       img: "/cofounder1.jpg",
       description:
         "Strategic operations lead ensuring seamless coordination between passengers and porters, focused on user experience and service excellence.",
     },
-    {
-      name: "Navdeep",
-      role: "Co-Founder & CTO",
-      img: "/cofounder2.jpg",
-      description:
-        "Head of Technology, architecting the robust platform that powers real-time tracking, secure payments, and smooth booking experiences.",
-    },
+    
     {
       name: "Pankaj",
       role: "Co-Founder & Growth Lead",

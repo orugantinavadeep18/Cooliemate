@@ -170,14 +170,14 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pb-0 overflow-x-hidden">
       <Navbar />
 
-      {/* Hero Section with Parallax */}
+      {/* Hero Section with Professional Header */}
       <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16">
         <ThreeBackground />
         
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/95 via-indigo-900/90 to-purple-900/95" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-blue-900/90 to-slate-900/95" />
         
         <motion.div 
-          className="absolute inset-0 opacity-20 hidden lg:block"
+          className="absolute inset-0 opacity-10 hidden lg:block"
           style={{
             backgroundImage: `url('/img1.jpg')`,
             backgroundSize: 'cover',
@@ -197,7 +197,7 @@ const Home = () => {
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
+            className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.3, 1],
               x: [0, -50, 0],
@@ -209,41 +209,43 @@ const Home = () => {
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
-            className="max-w-4xl mx-auto text-center"
+            className="max-w-5xl mx-auto text-center"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
           >
             <motion.div variants={fadeUp}>
               <motion.div
-                className="inline-block mb-6 px-4 sm:px-6 py-2 bg-white/10 backdrop-blur-lg rounded-full border border-white/20"
+                className="inline-flex items-center gap-2 mb-6 px-5 py-2.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20"
                 whileHover={{ scale: 1.05 }}
               >
-                <p className="text-blue-200 text-xs sm:text-sm font-medium flex items-center gap-2 justify-center">
-                  <Zap className="w-3 h-3 sm:w-4 sm:h-4" /> Revolutionizing Porter Services
-                </p>
+                <Zap className="w-4 h-4 text-blue-400" />
+                <p className="text-blue-200 text-sm font-semibold tracking-wide">REVOLUTIONIZING PORTER SERVICES</p>
               </motion.div>
             </motion.div>
 
             <motion.h1 
               variants={fadeUp}
-              className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black mb-4 sm:mb-6 bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 bg-clip-text text-transparent drop-shadow-2xl leading-tight px-4"
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 text-white leading-tight tracking-tight px-4"
             >
-              Welcome to<br />CoolieMate
+              Welcome to{" "}
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                CoolieMate
+              </span>
             </motion.h1>
 
             <motion.p 
               variants={fadeUp}
-              className="text-xl sm:text-2xl md:text-3xl mb-3 sm:mb-4 text-white font-semibold px-4"
+              className="text-xl sm:text-2xl lg:text-3xl mb-4 text-gray-200 font-medium px-4"
             >
               Your Personal Porter Booking Platform
             </motion.p>
 
             <motion.p 
               variants={fadeUp}
-              className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 text-blue-100 italic max-w-2xl mx-auto px-4"
+              className="text-base sm:text-lg lg:text-xl mb-10 text-blue-200/80 max-w-3xl mx-auto px-4 leading-relaxed"
             >
-              "Luggage help at your fingertips — making your journey lighter, one bag at a time"
+              Luggage help at your fingertips — making your journey lighter, one bag at a time
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
@@ -251,10 +253,10 @@ const Home = () => {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     size="lg"
-                    className="font-bold text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-2xl rounded-full group w-full sm:w-auto"
+                    className="font-semibold text-base px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-xl rounded-lg group w-full sm:w-auto"
                   >
                     Book a Porter Now
-                    <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </motion.div>
               </Link>
@@ -263,7 +265,7 @@ const Home = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="font-semibold text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 bg-white/10 backdrop-blur-lg border-2 border-white/30 text-white hover:bg-white/20 rounded-full w-full sm:w-auto"
+                  className="font-semibold text-base px-8 py-6 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white hover:bg-white/20 rounded-lg w-full sm:w-auto"
                 >
                   Download Our App
                 </Button>
@@ -271,7 +273,7 @@ const Home = () => {
             </motion.div>
 
             <motion.div
-              className="mt-12 sm:mt-20"
+              className="mt-16"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.8 }}
@@ -294,55 +296,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Animated Marquee */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white py-3 sm:py-4 shadow-lg relative overflow-hidden">
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-          animate={{ x: ['-100%', '100%'] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-        />
-        <marquee behavior="scroll" direction="left" scrollamount="10" className="text-sm sm:text-base lg:text-lg font-semibold tracking-wide">
-          🚉 Now available at Kurnool Railway Station! — Book your porter hassle-free with CoolieMate — Trusted by 5000+ travelers
-        </marquee>
-      </div>
-
-      {/* Stats Section */}
-      <section className="py-12 sm:py-16 lg:py-20 relative">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-          >
-            {stats.map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <motion.div
-                  key={index}
-                  variants={scaleIn}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl text-center relative overflow-hidden group"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                  />
-                  <div className="relative z-10">
-                    <IconComponent className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 mx-auto mb-2 sm:mb-4" />
-                    <div className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 mb-1 sm:mb-2">
-                      <AnimatedCounter end={stat.value} />
-                      {stat.suffix || ''}
-                    </div>
-                    <p className="text-gray-600 font-medium text-xs sm:text-sm lg:text-base">{stat.label}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-20 relative">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -359,7 +312,7 @@ const Home = () => {
             >
               <p className="text-blue-600 text-xs sm:text-sm font-semibold">OUR FEATURES</p>
             </motion.div>
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-gray-900 px-4">
               Why Choose CoolieMate?
             </h2>
             <p className="text-gray-600 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed px-4">
@@ -427,7 +380,7 @@ const Home = () => {
             >
               <p className="text-blue-600 text-xs sm:text-sm font-semibold">TRANSPARENT PRICING</p>
             </motion.div>
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 text-gray-900 px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-gray-900 px-4">
               Fair & Fixed Rates
             </h2>
             <p className="text-gray-600 text-lg sm:text-xl max-w-3xl mx-auto px-4">
@@ -524,7 +477,7 @@ const Home = () => {
             >
               <p className="text-blue-600 text-xs sm:text-sm font-semibold">SIMPLE PROCESS</p>
             </motion.div>
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 text-gray-900 px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-gray-900 px-4">
               How It Works
             </h2>
             <p className="text-gray-600 text-lg sm:text-xl px-4">
@@ -587,9 +540,9 @@ const Home = () => {
           >
             <Link to="/book">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button size="lg" className="font-bold text-base sm:text-lg px-10 sm:px-12 py-6 sm:py-7 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-xl rounded-full group">
+                <Button size="lg" className="font-semibold text-base px-10 sm:px-12 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-xl rounded-lg group">
                   Get Started Now
-                  <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </motion.div>
             </Link>
@@ -614,7 +567,7 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-4">
               What Our Customers Say
             </h2>
             <p className="text-gray-300 text-lg sm:text-xl px-4">
@@ -690,7 +643,7 @@ const Home = () => {
               <Award className="w-16 h-16 sm:w-20 sm:h-20 mx-auto text-yellow-300" />
             </motion.div>
             
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-black mb-4 sm:mb-6 px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-4">
               Ready to Experience Hassle-Free Travel?
             </h2>
             
@@ -709,10 +662,10 @@ const Home = () => {
                 <Link to="/book">
                   <Button
                     size="lg"
-                    className="font-bold text-base sm:text-lg px-10 sm:px-12 py-6 sm:py-7 bg-white text-blue-600 hover:bg-gray-100 shadow-2xl rounded-full group w-full sm:w-auto"
+                    className="font-semibold text-base px-10 sm:px-12 py-6 bg-white text-blue-600 hover:bg-gray-100 shadow-2xl rounded-lg group w-full sm:w-auto"
                   >
                     Book Your Porter
-                    <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
               </motion.div>
@@ -721,7 +674,7 @@ const Home = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="font-semibold text-base sm:text-lg px-10 sm:px-12 py-6 sm:py-7 bg-transparent border-2 border-white text-white hover:bg-white/10 rounded-full w-full sm:w-auto"
+                  className="font-semibold text-base px-10 sm:px-12 py-6 bg-transparent border-2 border-white text-white hover:bg-white/10 rounded-lg w-full sm:w-auto"
                 >
                   Download App
                 </Button>
@@ -735,18 +688,7 @@ const Home = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.5 }}
             >
-              <div>
-                <p className="text-2xl sm:text-3xl font-black">24/7</p>
-                <p className="text-blue-100 text-xs sm:text-sm">Support Available</p>
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-black">100%</p>
-                <p className="text-blue-100 text-xs sm:text-sm">Verified Porters</p>
-              </div>
-              <div>
-                <p className="text-2xl sm:text-3xl font-black">5000+</p>
-                <p className="text-blue-100 text-xs sm:text-sm">Happy Customers</p>
-              </div>
+             
             </motion.div>
           </motion.div>
         </div>

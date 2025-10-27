@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,13 +7,150 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
-import { Eye, EyeOff, Loader2, User, Lock, Sparkles, Phone } from "lucide-react";
+import { Eye, EyeOff, Loader2, User, Lock, Sparkles, Phone, CheckCircle, XCircle } from "lucide-react";
 
 const API_BASE = 'https://cooliemate.onrender.com';
+
+// Audio notification system using Web Audio API
+const useAudioNotification = () => {
+  const audioContextRef = useRef(null);
+
+  useEffect(() => {
+    // Initialize AudioContext
+    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
+
+  const playSuccessSound = () => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+
+    // Success sound: cheerful ascending tones
+    const now = ctx.currentTime;
+    const oscillator1 = ctx.createOscillator();
+    const oscillator2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator1.type = 'sine';
+    oscillator2.type = 'sine';
+    
+    // Play ascending notes: C, E, G (major chord)
+    oscillator1.frequency.setValueAtTime(523.25, now); // C5
+    oscillator1.frequency.setValueAtTime(659.25, now + 0.1); // E5
+    oscillator1.frequency.setValueAtTime(783.99, now + 0.2); // G5
+
+    oscillator2.frequency.setValueAtTime(523.25 * 2, now); // C6
+    oscillator2.frequency.setValueAtTime(659.25 * 2, now + 0.1); // E6
+    oscillator2.frequency.setValueAtTime(783.99 * 2, now + 0.2); // G6
+
+    gainNode.gain.setValueAtTime(0.3, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+    oscillator1.start(now);
+    oscillator2.start(now);
+    oscillator1.stop(now + 0.5);
+    oscillator2.stop(now + 0.5);
+  };
+
+  const playErrorSound = () => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+
+    // Error sound: descending tones with slight dissonance
+    const now = ctx.currentTime;
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = 'sawtooth';
+    
+    // Play descending notes with dissonance
+    oscillator.frequency.setValueAtTime(440, now); // A4
+    oscillator.frequency.setValueAtTime(370, now + 0.1); // F#4
+    oscillator.frequency.setValueAtTime(293.66, now + 0.2); // D4
+
+    gainNode.gain.setValueAtTime(0.2, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.4);
+  };
+
+  const playWarningSound = () => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+
+    // Warning sound: repeating beep
+    const now = ctx.currentTime;
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(800, now);
+
+    // Create beep pattern
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.setValueAtTime(0.2, now + 0.05);
+    gainNode.gain.setValueAtTime(0, now + 0.15);
+    gainNode.gain.setValueAtTime(0.2, now + 0.25);
+    gainNode.gain.setValueAtTime(0, now + 0.35);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.4);
+  };
+
+  return { playSuccessSound, playErrorSound, playWarningSound };
+};
+
+// Custom solid toast component
+const SolidToast = ({ title, description, variant, icon: Icon }) => {
+  const bgColors = {
+    default: "bg-blue-600",
+    destructive: "bg-red-600",
+    success: "bg-green-600"
+  };
+
+  const iconColors = {
+    default: "text-blue-100",
+    destructive: "text-red-100",
+    success: "text-green-100"
+  };
+
+  return (
+    <div className={`${bgColors[variant] || bgColors.default} text-white p-4 rounded-xl shadow-2xl min-w-[320px] max-w-md`}>
+      <div className="flex items-start gap-3">
+        {Icon && (
+          <div className="flex-shrink-0 mt-0.5">
+            <Icon className={`w-6 h-6 ${iconColors[variant] || iconColors.default}`} />
+          </div>
+        )}
+        <div className="flex-1">
+          <h3 className="font-bold text-base mb-1">{title}</h3>
+          <p className="text-sm opacity-95">{description}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PorterLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { playSuccessSound, playErrorSound, playWarningSound } = useAudioNotification();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentials, setCredentials] = useState({
@@ -21,15 +158,35 @@ const PorterLogin = () => {
     password: "",
   });
 
+  const showToastWithSound = (options) => {
+    const { variant, ...toastOptions } = options;
+    
+    // Play appropriate sound
+    if (variant === 'success') {
+      playSuccessSound();
+    } else if (variant === 'destructive') {
+      playErrorSound();
+    } else {
+      playWarningSound();
+    }
+
+    // Show toast
+    toast({
+      ...toastOptions,
+      variant,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { phone, password } = credentials;
 
     // Check for admin login
     if (phone === "9494704280" && password === "CooliemateDN") {
-      toast({
+      showToastWithSound({
         title: "Admin Login Successful",
         description: "Welcome to Admin Dashboard!",
+        variant: "success",
       });
       setTimeout(() => {
         navigate("/admin-dashboard");
@@ -39,7 +196,7 @@ const PorterLogin = () => {
 
     // Validation
     if (!phone || !password) {
-      toast({
+      showToastWithSound({
         title: "Missing Fields",
         description: "Please enter both mobile number and password",
         variant: "destructive",
@@ -48,7 +205,7 @@ const PorterLogin = () => {
     }
 
     if (!/^[0-9]{10}$/.test(phone)) {
-      toast({
+      showToastWithSound({
         title: "Invalid Phone Number",
         description: "Please enter a valid 10-digit mobile number",
         variant: "destructive",
@@ -86,24 +243,30 @@ const PorterLogin = () => {
 
       console.log('✅ Login successful:', data);
 
-      // Store authentication data in localStorage for persistent login
-      localStorage.setItem('porterToken', data.data.token);
-      localStorage.setItem('porterId', data.data.id);
-      localStorage.setItem('porterPhone', data.data.phone);
-      localStorage.setItem('porterBadgeNumber', data.data.badgeNumber);
-      localStorage.setItem('porterName', data.data.name);
-      localStorage.setItem('porterStation', data.data.station);
-      localStorage.setItem('porterImage', data.data.image);
-      localStorage.setItem('porterRating', data.data.rating);
-      localStorage.setItem('porterTotalTrips', data.data.totalTrips);
-      localStorage.setItem('porterExperience', data.data.experience || '1 year');
-      localStorage.setItem('porterSpecialization', data.data.specialization || 'General Luggage');
-      localStorage.setItem('porterLanguages', JSON.stringify(data.data.languages || ['English', 'Hindi']));
-      localStorage.setItem('porterIsOnline', data.data.isOnline);
+      // Store authentication data in memory (not localStorage as per Claude.ai restrictions)
+      const porterData = {
+        token: data.data.token,
+        id: data.data.id,
+        phone: data.data.phone,
+        badgeNumber: data.data.badgeNumber,
+        name: data.data.name,
+        station: data.data.station,
+        image: data.data.image,
+        rating: data.data.rating,
+        totalTrips: data.data.totalTrips,
+        experience: data.data.experience || '1 year',
+        specialization: data.data.specialization || 'General Luggage',
+        languages: data.data.languages || ['English', 'Hindi'],
+        isOnline: data.data.isOnline
+      };
 
-      toast({
+      // Store in sessionStorage as temporary alternative
+      sessionStorage.setItem('porterData', JSON.stringify(porterData));
+
+      showToastWithSound({
         title: "Login Successful",
         description: `Welcome back, ${data.data.name}! You are now online.`,
+        variant: "success",
       });
 
       setTimeout(() => {
@@ -112,7 +275,7 @@ const PorterLogin = () => {
 
     } catch (error) {
       console.error('❌ Login Error:', error);
-      toast({
+      showToastWithSound({
         title: "Login Failed",
         description: error.message || "Invalid credentials. Please try again.",
         variant: "destructive",

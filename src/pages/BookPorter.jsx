@@ -7,15 +7,105 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { mockPNRData, calculatePrice } from "@/lib/mockData";
-import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { Loader2, CheckCircle2, IndianRupee, Train, MapPin, Calendar, Clock, User, Phone, Luggage, Sparkles, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Footer from "@/pages/Footer";
+
 const BookPorter = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Enhanced Sound notification function with working audio for each action
+  const playSound = (type) => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    switch(type) {
+      case 'pnr-success':
+        // PNR verification success - pleasant ascending tones
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.4);
+        break;
+        
+      case 'pnr-error':
+        // PNR verification error - low warning tone
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.15);
+        oscillator.type = 'sawtooth';
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+        break;
+        
+      case 'booking-success':
+        // Booking submission success - celebratory chime
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.08); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.16); // G5
+        oscillator.frequency.setValueAtTime(1046.50, audioContext.currentTime + 0.24); // C6
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+        break;
+        
+      case 'form-error':
+        // Form validation error - gentle alert beep
+        oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+        oscillator.type = 'square';
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+        break;
+        
+      case 'login-success':
+        // Login success - welcoming tone
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+        oscillator.frequency.setValueAtTime(554.37, audioContext.currentTime + 0.1); // C#5
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.35);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.35);
+        break;
+        
+      case 'login-error':
+        // Login error - denial tone
+        oscillator.frequency.setValueAtTime(250, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime + 0.12);
+        oscillator.type = 'triangle';
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.25);
+        break;
+        
+      default:
+        // Default notification - simple beep
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+    }
+  };
+
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -35,10 +125,10 @@ const BookPorter = () => {
 
   const handlePNRLookup = async () => {
     if (formData.pnr.length !== 10) {
-      toast({
-        title: "Invalid PNR",
-        description: "PNR number must be 10 digits",
-        variant: "destructive",
+      playSound('pnr-error');
+      sonnerToast.error('Invalid PNR', {
+        description: 'PNR number must be 10 digits',
+        duration: 4000,
       });
       return;
     }
@@ -80,10 +170,10 @@ const BookPorter = () => {
         };
 
         setPnrInfo(info);
-
-        toast({
-          title: "PNR Verified! ✓",
+        playSound('pnr-success');
+        sonnerToast.success('PNR Verified Successfully! ✓', {
           description: `Train ${info.trainNo} - ${info.trainName}`,
+          duration: 5000,
         });
       } else {
         throw new Error("Invalid PNR or no data found");
@@ -94,20 +184,20 @@ const BookPorter = () => {
       const info = mockPNRData[formData.pnr];
       if (info) {
         setPnrInfo(info);
-
-        toast({
-          title: "PNR Verified (Demo Mode)",
-          description: `Train ${info.trainNo} - ${info.trainName}`,
+        playSound('pnr-success');
+        sonnerToast.success('PNR Verified Successfully! ✓', {
+          description: `Train ${info.trainNo} - ${info.trainName} (Demo Mode)`,
+          duration: 5000,
         });
       } else {
         const errorMessage = axios.isAxiosError(error)
           ? error.response?.data?.message || error.message
           : "Unknown error occurred";
 
-        toast({
-          title: "PNR Lookup Failed",
+        playSound('pnr-error');
+        sonnerToast.error('PNR Verification Failed', {
           description: `Error: ${errorMessage}. For demo, try: 1234567890`,
-          variant: "destructive",
+          duration: 6000,
         });
       }
     } finally {
@@ -138,28 +228,28 @@ const BookPorter = () => {
       !formData.numberOfBags ||
       !formData.weight
     ) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
+      playSound('form-error');
+      sonnerToast.error('Missing Information', {
+        description: 'Please fill in all required fields',
+        duration: 4000,
       });
       return;
     }
 
     if (formData.phone.length !== 10) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Phone number must be 10 digits",
-        variant: "destructive",
+      playSound('form-error');
+      sonnerToast.error('Invalid Phone Number', {
+        description: 'Phone number must be 10 digits',
+        duration: 4000,
       });
       return;
     }
 
     if (!pnrInfo) {
-      toast({
-        title: "PNR Not Verified",
-        description: "Please verify your PNR before proceeding",
-        variant: "destructive",
+      playSound('form-error');
+      sonnerToast.error('PNR Not Verified', {
+        description: 'Please verify your PNR before proceeding',
+        duration: 4000,
       });
       return;
     }
@@ -199,9 +289,10 @@ const BookPorter = () => {
     setTimeout(() => {
       setLoading(false);
       navigate("/available", { state: bookingData });
-      toast({
-        title: "Details Verified ✓",
-        description: "Showing available porters for your booking",
+      playSound('booking-success');
+      sonnerToast.success('Details Verified Successfully! ✓', {
+        description: 'Showing available porters for your booking',
+        duration: 4000,
       });
     }, 1500);
   };
