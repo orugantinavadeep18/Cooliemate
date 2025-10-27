@@ -11,11 +11,11 @@ const Footer = () => {
       { name: "Coolie Login", path: "/porter-login" },
       // { name: "Admin Login", path: "/admin-login" },
     ],
-    services: [
-      { name: "Pricing", path: "/pricing" },
-      { name: "FAQ", path: "/faq" },
-      { name: "Support", path: "/support" },
-    ],
+    // services: [
+    //   { name: "Pricing", path: "/pricing" },
+    //   { name: "FAQ", path: "/faq" },
+    //   { name: "Support", path: "/support" },
+    // ],
     legal: [
       { name: "Privacy Policy", path: "/privacy-policy" },
       { name: "Terms of Service", path: "/terms" },
@@ -64,7 +64,7 @@ const Footer = () => {
             <div className="flex gap-3">
               <motion.a
                 whileHover={{ scale: 1.1, y: -2 }}
-                href="mailto:support@coolimate.com"
+                href="mailto:orugantinavadeep@gmail.com"
                 className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center hover:shadow-lg hover:shadow-red-500/50 transition-all"
               >
                 <Mail size={18} />
@@ -112,7 +112,7 @@ const Footer = () => {
             </ul>
           </motion.div>
 
-          {/* Services Links */}
+          {/* Services Links
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -136,7 +136,7 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </motion.div> */}
 
           {/* Contact Section */}
           <motion.div
@@ -152,7 +152,7 @@ const Footer = () => {
             <div className="space-y-4">
               <div className="flex items-start gap-3 text-gray-300 hover:text-yellow-400 transition-colors group">
                 <Mail size={18} className="mt-1 flex-shrink-0" />
-                <a href="mailto:support@coolimate.com" className="text-sm">support@coolimate.com</a>
+                <a href="mailto:orugantinavadeep.com" className="text-sm">orugantinavadeep@gmail.com</a>
               </div>
               <div className="flex items-start gap-3 text-gray-300 hover:text-yellow-400 transition-colors group">
                 <Phone size={18} className="mt-1 flex-shrink-0" />

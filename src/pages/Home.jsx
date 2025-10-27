@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Briefcase, Shield, Smartphone, IndianRupee, Clock, Star, Users, Award, CheckCircle, ArrowRight, MapPin, Zap } from "lucide-react";
+import { Briefcase, Shield, Smartphone, IndianRupee, Clock, Star, Users, Award, CheckCircle, ArrowRight, MapPin, Zap, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
@@ -53,27 +53,28 @@ const ThreeBackground = () => {
     mountRef.current.appendChild(renderer.domElement);
 
     const particlesGeometry = new THREE.BufferGeometry();
-    const particleCount = 100;
+    const particleCount = 150;
     const positions = new Float32Array(particleCount * 3);
     const velocities = [];
 
     for (let i = 0; i < particleCount * 3; i += 3) {
-      positions[i] = (Math.random() - 0.5) * 20;
-      positions[i + 1] = (Math.random() - 0.5) * 20;
-      positions[i + 2] = (Math.random() - 0.5) * 20;
+      positions[i] = (Math.random() - 0.5) * 25;
+      positions[i + 1] = (Math.random() - 0.5) * 25;
+      positions[i + 2] = (Math.random() - 0.5) * 25;
       velocities.push({
-        x: (Math.random() - 0.5) * 0.02,
-        y: (Math.random() - 0.5) * 0.02,
-        z: (Math.random() - 0.5) * 0.02
+        x: (Math.random() - 0.5) * 0.015,
+        y: (Math.random() - 0.5) * 0.015,
+        z: (Math.random() - 0.5) * 0.015
       });
     }
 
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     const particlesMaterial = new THREE.PointsMaterial({
       color: 0x3b82f6,
-      size: 0.1,
+      size: 0.15,
       transparent: true,
-      opacity: 0.6
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending
     });
 
     const particles = new THREE.Points(particlesGeometry, particlesMaterial);
@@ -90,13 +91,14 @@ const ThreeBackground = () => {
         positions[i * 3 + 1] += velocities[i].y;
         positions[i * 3 + 2] += velocities[i].z;
 
-        if (Math.abs(positions[i * 3]) > 10) velocities[i].x *= -1;
-        if (Math.abs(positions[i * 3 + 1]) > 10) velocities[i].y *= -1;
-        if (Math.abs(positions[i * 3 + 2]) > 10) velocities[i].z *= -1;
+        if (Math.abs(positions[i * 3]) > 12) velocities[i].x *= -1;
+        if (Math.abs(positions[i * 3 + 1]) > 12) velocities[i].y *= -1;
+        if (Math.abs(positions[i * 3 + 2]) > 12) velocities[i].z *= -1;
       }
       particles.geometry.attributes.position.needsUpdate = true;
 
-      particles.rotation.y += 0.001;
+      particles.rotation.y += 0.0005;
+      particles.rotation.x += 0.0003;
       renderer.render(scene, camera);
     };
 
@@ -170,22 +172,29 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pb-0 overflow-x-hidden">
       <Navbar />
 
-      {/* Hero Section with Professional Header */}
+      {/* Premium Hero Section */}
       <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16">
         <ThreeBackground />
         
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-blue-900/90 to-slate-900/95" />
-        
-        <motion.div 
-          className="absolute inset-0 opacity-10 hidden lg:block"
-          style={{
-            backgroundImage: `url('/img1.jpg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            scale: scaleSpring,
-          }}
-        />
+        {/* Background image with dark overlay */}
+       <div className="absolute inset-0">
+  {/* Hide this image on mobile, show on medium (md) and above */}
+  <div 
+    className="absolute inset-0 bg-cover bg-center hidden md:block"
+    style={{
+      backgroundImage: `url('/img1.jpg')`,
+    }}
+  />
+  <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95" />
+</div>
 
+        
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)`
+        }} />
+
+        {/* Animated gradient orbs - matching your original blue theme */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
             className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"
@@ -205,55 +214,103 @@ const Home = () => {
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.25, 1],
+              rotate: [0, 180, 360]
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          />
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
-            className="max-w-5xl mx-auto text-center"
+            className="max-w-6xl mx-auto text-center"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
           >
+            {/* Premium Badge */}
             <motion.div variants={fadeUp}>
               <motion.div
-                className="inline-flex items-center gap-2 mb-6 px-5 py-2.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20"
-                whileHover={{ scale: 1.05 }}
+                className="inline-flex items-center gap-2.5 mb-8 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl"
+                whileHover={{ scale: 1.05, borderColor: 'rgba(59, 130, 246, 0.5)' }}
+                transition={{ duration: 0.3 }}
               >
-                <Zap className="w-4 h-4 text-blue-400" />
-                <p className="text-blue-200 text-sm font-semibold tracking-wide">REVOLUTIONIZING PORTER SERVICES</p>
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                >
+                  <Sparkles className="w-5 h-5 text-blue-400" />
+                </motion.div>
+                <p className="text-blue-200 text-sm font-bold tracking-[0.2em] uppercase">
+                  Premium Porter Services
+                </p>
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
+                >
+                  <Sparkles className="w-5 h-5 text-blue-400" />
+                </motion.div>
               </motion.div>
             </motion.div>
 
-            <motion.h1 
-              variants={fadeUp}
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 text-white leading-tight tracking-tight px-4"
-            >
-              Welcome to{" "}
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                CoolieMate
-              </span>
-            </motion.h1>
+            {/* Main Heading */}
+            <motion.div variants={fadeUp}>
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tight px-4">
+                <span className="text-white block mb-2">Welcome to</span>
+                <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
+                  CoolieMate
+                </span>
+              </h1>
+            </motion.div>
+
+            {/* Subtitle with elegant divider */}
+            <motion.div variants={fadeUp} className="flex items-center justify-center gap-4 mb-6">
+              <motion.div 
+                className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-blue-400/50"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              />
+              <Star className="w-5 h-5 text-blue-400 fill-blue-400" />
+              <motion.div 
+                className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-blue-400/50"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              />
+            </motion.div>
 
             <motion.p 
               variants={fadeUp}
-              className="text-xl sm:text-2xl lg:text-3xl mb-4 text-gray-200 font-medium px-4"
+              className="text-2xl sm:text-3xl lg:text-4xl mb-5 font-semibold px-4"
             >
-              Your Personal Porter Booking Platform
+              <span className="text-blue-300">Your Personal Porter</span>
+              <span className="text-gray-300"> Booking Platform</span>
             </motion.p>
 
+            {/* Description */}
             <motion.p 
               variants={fadeUp}
-              className="text-base sm:text-lg lg:text-xl mb-10 text-blue-200/80 max-w-3xl mx-auto px-4 leading-relaxed"
+              className="text-base sm:text-lg lg:text-xl mb-12 text-gray-300 max-w-3xl mx-auto px-4 leading-relaxed"
             >
-              Luggage help at your fingertips — making your journey lighter, one bag at a time
+              Experience <span className="text-blue-400 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
             </motion.p>
 
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
-              <Link to="/book">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            {/* CTA Buttons */}
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-5 justify-center items-center px-4 mb-16">
+              <Link to="/book" className="w-full sm:w-auto">
+                <motion.div 
+                  whileHover={{ scale: 1.05, y: -2 }} 
+                  whileTap={{ scale: 0.98 }}
+                  className="relative group"
+                >
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-300" />
                   <Button
                     size="lg"
-                    className="font-semibold text-base px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-xl rounded-lg group w-full sm:w-auto"
+                    className="relative font-bold text-lg px-10 py-7 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
                   >
                     Book a Porter Now
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -261,36 +318,42 @@ const Home = () => {
                 </motion.div>
               </Link>
               
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto"
+              >
                 <Button
                   size="lg"
                   variant="outline"
-                  className="font-semibold text-base px-8 py-6 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white hover:bg-white/20 rounded-lg w-full sm:w-auto"
+                  className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-blue-400/50 text-blue-300 hover:bg-white/10 hover:border-blue-400 rounded-xl w-full sm:w-auto transition-all duration-300"
                 >
                   Download Our App
                 </Button>
               </motion.div>
             </motion.div>
 
+            {/* Scroll Indicator */}
             <motion.div
-              className="mt-16"
+              className="mt-20"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.8 }}
             >
               <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                animate={{ y: [0, 12, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 className="inline-block"
               >
-                <div className="w-6 h-10 border-2 border-white/30 rounded-full p-1">
+                <div className="w-7 h-12 border-2 border-blue-400/40 rounded-full p-1.5 backdrop-blur-sm">
                   <motion.div
-                    className="w-1.5 h-3 bg-white rounded-full mx-auto"
-                    animate={{ y: [0, 12, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="w-2 h-3 bg-gradient-to-b from-blue-400 to-cyan-500 rounded-full mx-auto"
+                    animate={{ y: [0, 16, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
                 </div>
               </motion.div>
+              <p className="text-blue-300/60 text-xs mt-3 font-medium tracking-wider">SCROLL TO EXPLORE</p>
             </motion.div>
           </motion.div>
         </div>
@@ -679,16 +742,6 @@ const Home = () => {
                   Download App
                 </Button>
               </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-6 sm:gap-8 text-center px-4"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5 }}
-            >
-             
             </motion.div>
           </motion.div>
         </div>
