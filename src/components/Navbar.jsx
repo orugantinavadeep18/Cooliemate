@@ -37,7 +37,7 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    // { name: "Home", path: "/", icon: Home },
+    { name: "Home", path: "/", icon: Home },
     { name: "Book Porter", path: "/", icon: Package },
     { name: "Porter Login", path: "/porter-login", icon: LogIn },
     { name: "About Us", path: "/about", icon: Info },
