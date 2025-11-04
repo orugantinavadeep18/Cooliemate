@@ -148,7 +148,7 @@ const AboutUs = () => {
     {
       name: "Pankaj",
       role: "Co-Founder & Growth Lead",
-      img: "/pank.png",
+      img: "/pank.jpg",
       description:
         "Growth and partnerships expert, building bridges with railway authorities, porter unions, and stakeholders to scale CoolieMate across India.",
     },
