@@ -127,7 +127,7 @@ const Home = () => {
   const opacityProgress = useTransform(scrollYProgress, [0, 0.3], [1, 0.7]);
   const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
   const scaleSpring = useSpring(scaleProgress, springConfig);
-
+  const [showNotification, setShowNotification] = useState(false);
   const features = [
     { icon: Smartphone, title: "Advance Booking", description: "Book a certified coolie by entering your PNR number", color: "from-blue-500 to-cyan-500" },
     { icon: IndianRupee, title: "Standardized Rates", description: "No bargaining, just clear, fixed pricing", color: "from-emerald-500 to-teal-500" },
@@ -138,7 +138,7 @@ const Home = () => {
   const pricing = [
     { bags: "1-2 bags", weight: "≤20 kg", price: "₹99", description: "Perfect for solo travelers", popular: false },
     { bags: "3-4 bags", weight: "21-40 kg", price: "₹149", description: "Ideal for families", popular: true },
-    { bags: "5+ bags", weight: ">40 kg", price: "₹199", description: "For heavy luggage", popular: false },
+    { bags: "Wheel Chair Support and Heavy Luggage", weight: "Used Cart", price: "₹199-₹399", description: "For heavy luggage", popular: false },
   ];
 
   const stats = [
@@ -318,19 +318,33 @@ const Home = () => {
                 </motion.div>
               </Link>
               
-              <motion.div 
-                whileHover={{ scale: 1.05, y: -2 }} 
-                whileTap={{ scale: 0.98 }}
-                className="w-full sm:w-auto"
-              >
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-blue-400/50 text-blue-300 hover:bg-white/10 hover:border-blue-400 rounded-xl w-full sm:w-auto transition-all duration-300"
-                >
-                  Download Our App
-                </Button>
-              </motion.div>
+           <motion.div 
+  whileHover={{ scale: 1.05, y: -2 }} 
+  whileTap={{ scale: 0.98 }}
+  className="w-full sm:w-auto"
+>
+  <Button
+    size="lg"
+    variant="outline"
+    onClick={() => setShowNotification(true)}
+    className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-blue-400/50 text-blue-300 hover:bg-white/10 hover:border-blue-400 rounded-xl w-full sm:w-auto transition-all duration-300"
+  >
+    Download Our App
+  </Button>
+</motion.div>
+
+{/* Toast notification */}
+{showNotification && (
+  <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-up">
+    🚧 This feature is still in development!
+    <button 
+      onClick={() => setShowNotification(false)}
+      className="ml-4 font-bold"
+    >
+      ×
+    </button>
+  </div>
+)}
             </motion.div>
 
             {/* Scroll Indicator */}
@@ -465,7 +479,7 @@ const Home = () => {
                 whileHover={{ scale: 1.05, y: -10 }}
                 className="relative"
               >
-                {tier.popular && (
+                {/* {tier.popular && (
                   <motion.div
                     className="absolute -top-4 left-1/2 -translate-x-1/2 z-20"
                     initial={{ scale: 0 }}
@@ -476,7 +490,7 @@ const Home = () => {
                       MOST POPULAR
                     </div>
                   </motion.div>
-                )}
+                )} */}
                 
                 <div className={`bg-white rounded-3xl p-6 sm:p-8 shadow-xl h-full relative overflow-hidden ${tier.popular ? 'ring-2 sm:ring-4 ring-blue-500' : ''}`}>
                   <motion.div

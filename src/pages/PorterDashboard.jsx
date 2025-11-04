@@ -553,7 +553,7 @@ const PorterDashboard = () => {
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

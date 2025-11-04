@@ -411,7 +411,7 @@ const PorterRegistration = () => {
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

@@ -116,37 +116,6 @@ const useAudioNotification = () => {
   return { playSuccessSound, playErrorSound, playWarningSound };
 };
 
-// Custom solid toast component
-const SolidToast = ({ title, description, variant, icon: Icon }) => {
-  const bgColors = {
-    default: "bg-blue-600",
-    destructive: "bg-red-600",
-    success: "bg-green-600"
-  };
-
-  const iconColors = {
-    default: "text-blue-100",
-    destructive: "text-red-100",
-    success: "text-green-100"
-  };
-
-  return (
-    <div className={`${bgColors[variant] || bgColors.default} text-white p-4 rounded-xl shadow-2xl min-w-[320px] max-w-md`}>
-      <div className="flex items-start gap-3">
-        {Icon && (
-          <div className="flex-shrink-0 mt-0.5">
-            <Icon className={`w-6 h-6 ${iconColors[variant] || iconColors.default}`} />
-          </div>
-        )}
-        <div className="flex-1">
-          <h3 className="font-bold text-base mb-1">{title}</h3>
-          <p className="text-sm opacity-95">{description}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const PorterLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -243,8 +212,14 @@ const PorterLogin = () => {
 
       console.log('✅ Login successful:', data);
 
-      // Store authentication data in memory (not localStorage as per Claude.ai restrictions)
-      const porterData = {
+      // Store authentication data in localStorage (matching PorterDashboard expectations)
+      localStorage.setItem('porterToken', data.data.token);
+      localStorage.setItem('porterId', data.data.id);
+      localStorage.setItem('porterBadgeNumber', data.data.badgeNumber);
+      localStorage.setItem('porterName', data.data.name);
+      
+      // Also store full porter data for easy access
+      localStorage.setItem('porterData', JSON.stringify({
         token: data.data.token,
         id: data.data.id,
         phone: data.data.phone,
@@ -258,10 +233,7 @@ const PorterLogin = () => {
         specialization: data.data.specialization || 'General Luggage',
         languages: data.data.languages || ['English', 'Hindi'],
         isOnline: data.data.isOnline
-      };
-
-      // Store in sessionStorage as temporary alternative
-      sessionStorage.setItem('porterData', JSON.stringify(porterData));
+      }));
 
       showToastWithSound({
         title: "Login Successful",
@@ -434,7 +406,7 @@ const PorterLogin = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

@@ -747,7 +747,7 @@ const BookPorter = () => {
           </Card>
         </motion.div>
       </div>
-      <Footer />
+      
     </div>
   );
 };
