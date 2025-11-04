@@ -21,7 +21,9 @@ import {
   LogOut,
   Bell,
   TrendingUp,
-  Calendar
+  Calendar,
+  Award,
+  Activity
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/pages/Footer";
@@ -220,8 +222,11 @@ const PorterDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -236,192 +241,260 @@ const PorterDashboard = () => {
   const completedBookings = Array.isArray(bookings) ? bookings.filter(b => b.status === 'completed') : [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Porter Dashboard</h1>
-            <p className="text-muted-foreground">Manage your bookings and profile</p>
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-white shadow-lg ring-4 ring-white/30">
+                <img
+                  src={`${API_BASE}/uploads/${porterData.image}`}
+                  alt={porterData.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23ddd' width='64' height='64'/%3E%3C/svg%3E";
+                  }}
+                />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold mb-1">Welcome back, {porterData.name}</h1>
+                <p className="text-blue-100 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  {porterData.station}
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Porter Profile Card */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 relative">
-                    <img
-                      src={`${API_BASE}/uploads/${porterData.image}`}
-                      alt={porterData.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Crect fill='%23ddd' width='96' height='96'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='36' fill='%23999'%3E%3C/text%3E%3C/svg%3E";
-                      }}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-4">
+            <div className="space-y-6">
+              {/* Status Card */}
+              <Card className="shadow-lg border-0 overflow-hidden">
+                <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 text-white">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-gray-300'} shadow-lg`} />
+                      <span className="font-semibold text-lg">
+                        {isOnline ? 'You are Online' : 'You are Offline'}
+                      </span>
+                    </div>
+                    <Switch
+                      checked={isOnline}
+                      onCheckedChange={handleStatusToggle}
+                      disabled={updatingStatus}
+                      className="data-[state=checked]:bg-green-500"
                     />
                   </div>
+                  <p className="text-blue-100 text-sm">
+                    {isOnline ? 'You can receive new booking requests' : 'Turn on to start receiving bookings'}
+                  </p>
                 </div>
-                <CardTitle className="text-xl">{porterData.name}</CardTitle>
-                <div className="flex items-center justify-center space-x-2 mt-2">
-                  <Badge variant={porterData.isVerified ? "success" : "secondary"}>
-                    {porterData.isVerified ? "✓ Verified" : "Pending"}
-                  </Badge>
-                </div>
-              </CardHeader>
+              </Card>
 
-              <CardContent className="space-y-4">
-                {/* Online Status Toggle */}
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                    <Label htmlFor="online-status" className="cursor-pointer">
-                      {isOnline ? 'Online' : 'Offline'}
-                    </Label>
-                  </div>
-                  <Switch
-                    id="online-status"
-                    checked={isOnline}
-                    onCheckedChange={handleStatusToggle}
-                    disabled={updatingStatus}
-                  />
-                </div>
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="shadow-lg border-0 bg-gradient-to-br from-yellow-50 to-yellow-100">
+                  <CardContent className="p-5 text-center">
+                    <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center mx-auto mb-3 shadow-lg">
+                      <Star className="w-6 h-6 text-white fill-white" />
+                    </div>
+                    <p className="text-3xl font-bold text-yellow-900 mb-1">{porterData.rating}</p>
+                    <p className="text-sm text-yellow-700 font-medium">Rating</p>
+                  </CardContent>
+                </Card>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-blue-50 rounded-lg text-center">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 mx-auto mb-1" />
-                    <p className="text-2xl font-bold">{porterData.rating}</p>
-                    <p className="text-xs text-muted-foreground">Rating</p>
-                  </div>
-                  <div className="p-3 bg-green-50 rounded-lg text-center">
-                    <Briefcase className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                    <p className="text-2xl font-bold">{porterData.totalTrips}</p>
-                    <p className="text-xs text-muted-foreground">Total Trips</p>
-                  </div>
-                </div>
+                <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-green-100">
+                  <CardContent className="p-5 text-center">
+                    <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-3 shadow-lg">
+                      <Briefcase className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-3xl font-bold text-green-900 mb-1">{porterData.totalTrips}</p>
+                    <p className="text-sm text-green-700 font-medium">Total Trips</p>
+                  </CardContent>
+                </Card>
+              </div>
 
-                {/* Details */}
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Badge:</span>
-                    <span className="font-semibold">{porterData.badgeNumber}</span>
+              {/* Profile Details */}
+              <Card className="shadow-lg border-0">
+                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-slate-100">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5 text-blue-600" />
+                    Profile Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Award className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Badge Number</p>
+                        <p className="font-semibold text-slate-900">{porterData.badgeNumber}</p>
+                      </div>
+                    </div>
+                    {porterData.isVerified && (
+                      <Badge className="bg-green-100 text-green-700 border-green-300">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Station:</span>
-                    <span className="font-semibold">{porterData.station}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Phone:</span>
-                    <span className="font-semibold">{porterData.phone}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Experience:</span>
-                    <span className="font-semibold">{porterData.experience}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Specialization:</span>
-                    <span className="font-semibold">{porterData.specialization}</span>
-                  </div>
-                </div>
 
-                {/* Languages */}
-                <div>
-  <p className="text-xs text-muted-foreground mb-2">Languages:</p>
-  <div className="flex flex-wrap gap-2">
-    {(porterData.languages && porterData.languages.length > 0
-      ? porterData.languages
-      : ["Telugu"]
-    ).map((lang) => (
-      <Badge key={lang} variant="secondary" className="text-xs">
-        {lang}
-      </Badge>
-    ))}
-  </div>
-</div>
+                  <div className="flex items-center gap-3 py-3 border-b">
+                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Phone Number</p>
+                      <p className="font-semibold text-slate-900">{porterData.phone}</p>
+                    </div>
+                  </div>
 
-              </CardContent>
-            </Card>
+                  <div className="flex items-center gap-3 py-3 border-b">
+                    <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Experience</p>
+                      <p className="font-semibold text-slate-900">{porterData.experience}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 py-3">
+                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Specialization</p>
+                      <p className="font-semibold text-slate-900">{porterData.specialization}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <p className="text-sm font-medium text-slate-700 mb-3">Languages</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(porterData.languages && porterData.languages.length > 0
+                        ? porterData.languages
+                        : ["Telugu"]
+                      ).map((lang) => (
+                        <Badge key={lang} variant="secondary" className="bg-slate-100 text-slate-700 border border-slate-200">
+                          {lang}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          {/* Bookings Section */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Main Content */}
+          <div className="lg:col-span-8 space-y-6">
             {/* Pending Requests */}
-            <Card>
-              <CardHeader>
+            <Card className="shadow-lg border-0">
+              <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-orange-100">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center">
-                    <Bell className="w-5 h-5 mr-2 text-orange-500" />
-                    Pending Requests ({pendingBookings.length})
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-lg">Pending Requests</p>
+                      <p className="text-sm font-normal text-slate-600">{pendingBookings.length} waiting for response</p>
+                    </div>
                   </CardTitle>
+                  {pendingBookings.length > 0 && (
+                    <Badge className="bg-orange-500 text-white px-3 py-1 text-base">
+                      {pendingBookings.length}
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {pendingBookings.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>No pending booking requests</p>
-                    <p className="text-sm mt-1">New requests will appear here</p>
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+                      <Bell className="w-10 h-10 text-orange-400" />
+                    </div>
+                    <p className="text-slate-900 font-semibold mb-1">No Pending Requests</p>
+                    <p className="text-sm text-slate-500">New booking requests will appear here</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {pendingBookings.map((booking) => (
-                      <Card key={booking._id} className="border-2 border-orange-200 bg-orange-50">
-                        <CardContent className="pt-6">
-                          <div className="space-y-3">
+                      <Card key={booking._id} className="border-2 border-orange-200 shadow-md hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="space-y-4">
                             <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-semibold text-lg">{booking.passengerName}</h4>
-                                <p className="text-sm text-muted-foreground flex items-center">
-                                  <Phone className="w-3 h-3 mr-1" />
-                                  {booking.phone}
-                                </p>
+                              <div className="flex items-start gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-lg">
+                                  {booking.passengerName.charAt(0)}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-lg text-slate-900">{booking.passengerName}</h4>
+                                  <p className="text-sm text-slate-600 flex items-center gap-1">
+                                    <Phone className="w-3.5 h-3.5" />
+                                    {booking.phone}
+                                  </p>
+                                </div>
                               </div>
-                              <Badge variant="warning">Pending</Badge>
+                              <Badge className="bg-orange-100 text-orange-700 border border-orange-300">
+                                New Request
+                              </Badge>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
                               <div>
-                                <p className="text-muted-foreground">Train</p>
-                                <p className="font-medium">{booking.trainNo} - {booking.trainName}</p>
+                                <p className="text-xs text-slate-500 font-medium mb-1">Train Details</p>
+                                <p className="font-semibold text-slate-900">{booking.trainNo}</p>
+                                <p className="text-sm text-slate-600">{booking.trainName}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground">Coach</p>
-                                <p className="font-medium">{booking.coachNo}</p>
+                                <p className="text-xs text-slate-500 font-medium mb-1">Coach Number</p>
+                                <p className="font-semibold text-slate-900 text-lg">{booking.coachNo}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground">Luggage</p>
-                                <p className="font-medium">{booking.numberOfBags} bags, {booking.weight} kg</p>
+                                <p className="text-xs text-slate-500 font-medium mb-1">Luggage</p>
+                                <p className="font-semibold text-slate-900">{booking.numberOfBags} bags</p>
+                                <p className="text-sm text-slate-600">{booking.weight} kg</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground">Price</p>
-                                <p className="font-medium">₹{booking.totalPrice}</p>
+                                <p className="text-xs text-slate-500 font-medium mb-1">Payment</p>
+                                <p className="font-bold text-green-600 text-xl">₹{booking.totalPrice}</p>
                               </div>
                             </div>
 
                             {booking.notes && (
-                              <div className="bg-white p-3 rounded border">
-                                <p className="text-xs text-muted-foreground mb-1">Special Notes:</p>
-                                <p className="text-sm">{booking.notes}</p>
+                              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                                <p className="text-xs font-semibold text-blue-900 mb-1 flex items-center gap-1">
+                                  <Activity className="w-3.5 h-3.5" />
+                                  Special Instructions
+                                </p>
+                                <p className="text-sm text-slate-700">{booking.notes}</p>
                               </div>
                             )}
 
-                            <div className="flex space-x-3 pt-3">
+                            <div className="grid grid-cols-2 gap-3 pt-2">
                               <Button
-                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                className="bg-green-600 hover:bg-green-700 shadow-md font-semibold"
                                 onClick={() => handleBookingAction(booking._id, 'accepted')}
                                 disabled={processingBooking === booking._id}
                               >
@@ -430,11 +503,11 @@ const PorterDashboard = () => {
                                 ) : (
                                   <CheckCircle className="w-4 h-4 mr-2" />
                                 )}
-                                Accept
+                                Accept Booking
                               </Button>
                               <Button
                                 variant="outline"
-                                className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                                className="border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-semibold"
                                 onClick={() => handleBookingAction(booking._id, 'declined')}
                                 disabled={processingBooking === booking._id}
                               >
@@ -456,46 +529,62 @@ const PorterDashboard = () => {
             </Card>
 
             {/* Active Bookings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Package className="w-5 h-5 mr-2 text-blue-500" />
-                  Active Bookings ({acceptedBookings.length})
+            <Card className="shadow-lg border-0">
+              <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-blue-100">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                    <Package className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-lg">Active Bookings</p>
+                    <p className="text-sm font-normal text-slate-600">{acceptedBookings.length} in progress</p>
+                  </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {acceptedBookings.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>No active bookings</p>
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                      <Package className="w-10 h-10 text-blue-400" />
+                    </div>
+                    <p className="text-slate-900 font-semibold mb-1">No Active Bookings</p>
+                    <p className="text-sm text-slate-500">Accepted bookings will appear here</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {acceptedBookings.map((booking) => (
-                      <Card key={booking._id} className="border-2 border-blue-200 bg-blue-50">
-                        <CardContent className="pt-6">
-                          <div className="space-y-3">
+                      <Card key={booking._id} className="border-2 border-blue-200 shadow-md">
+                        <CardContent className="p-6">
+                          <div className="space-y-4">
                             <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-semibold text-lg">{booking.passengerName}</h4>
-                                <p className="text-sm text-muted-foreground">{booking.phone}</p>
+                              <div className="flex items-start gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                                  {booking.passengerName.charAt(0)}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-lg text-slate-900">{booking.passengerName}</h4>
+                                  <p className="text-sm text-slate-600">{booking.phone}</p>
+                                </div>
                               </div>
-                              <Badge className="bg-blue-600">Active</Badge>
+                              <Badge className="bg-blue-600 text-white">
+                                <Activity className="w-3 h-3 mr-1" />
+                                In Progress
+                              </Badge>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
                               <div>
-                                <p className="text-muted-foreground">Station</p>
-                                <p className="font-medium">{booking.station}</p>
+                                <p className="text-xs text-slate-500 font-medium mb-1">Station</p>
+                                <p className="font-semibold text-slate-900">{booking.station}</p>
                               </div>
                               <div>
-                                <p className="text-muted-foreground">Date</p>
-                                <p className="font-medium">{booking.dateOfJourney}</p>
+                                <p className="text-xs text-slate-500 font-medium mb-1">Date</p>
+                                <p className="font-semibold text-slate-900">{booking.dateOfJourney}</p>
                               </div>
                             </div>
 
                             <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
+                              className="w-full bg-green-600 hover:bg-green-700 shadow-md font-semibold"
                               onClick={() => handleBookingAction(booking._id, 'completed')}
                               disabled={processingBooking === booking._id}
                             >
@@ -516,32 +605,51 @@ const PorterDashboard = () => {
             </Card>
 
             {/* Completed Bookings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
-                  Completed Trips ({completedBookings.length})
+            <Card className="shadow-lg border-0">
+              <CardHeader className="border-b bg-gradient-to-r from-green-50 to-green-100">
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-lg">Completed Trips</p>
+                    <p className="text-sm font-normal text-slate-600">{completedBookings.length} successful deliveries</p>
+                  </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 {completedBookings.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>No completed bookings yet</p>
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                      <Calendar className="w-10 h-10 text-green-400" />
+                    </div>
+                    <p className="text-slate-900 font-semibold mb-1">No Completed Trips Yet</p>
+                    <p className="text-sm text-slate-500">Your completed bookings will appear here</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {completedBookings.slice(0, 5).map((booking) => (
-                      <div key={booking._id} className="flex justify-between items-center p-3 bg-green-50 rounded border border-green-200">
-                        <div>
-                          <p className="font-medium">{booking.passengerName}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(booking.updatedAt).toLocaleDateString()}
-                          </p>
+                      <div key={booking._id} className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                            <CheckCircle className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">{booking.passengerName}</p>
+                            <p className="text-xs text-slate-500">
+                              {new Date(booking.updatedAt).toLocaleDateString('en-IN', { 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric' 
+                              })}
+                            </p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-green-700">₹{booking.totalPrice}</p>
-                          <Badge variant="success" className="text-xs">Completed</Badge>
+                          <p className="font-bold text-green-700 text-lg">₹{booking.totalPrice}</p>
+                          <Badge className="bg-green-600 text-white text-xs">
+                            Completed
+                          </Badge>
                         </div>
                       </div>
                     ))}
@@ -552,8 +660,6 @@ const PorterDashboard = () => {
           </div>
         </div>
       </div>
-
-      {/* <Footer /> */}
     </div>
   );
 };
