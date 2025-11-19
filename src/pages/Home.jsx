@@ -186,7 +186,7 @@ const Home = () => {
               backgroundImage: `url('/img1.jpg')`,
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 md:hidden" />
         </div>
 
         {/* Subtle pattern overlay */}
