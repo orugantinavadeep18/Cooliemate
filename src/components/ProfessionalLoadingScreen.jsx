@@ -156,10 +156,10 @@ const ProfessionalLoadingScreen = ({ onLoadingComplete }) => {
         initial={{ opacity: 0, y: 30, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 sm:p-8 md:p-12 max-w-xl mx-4 sm:mx-6 w-full"
+        className="relative z-10 bg-white/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/60 p-8 sm:p-10 md:p-14 max-w-xl mx-4 sm:mx-6 w-full"
       >
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-red-600/5 rounded-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-red-600/5 rounded-3xl pointer-events-none" />
 
         <div className="relative space-y-6 sm:space-y-8">
           {/* Logo */}
@@ -172,27 +172,43 @@ const ProfessionalLoadingScreen = ({ onLoadingComplete }) => {
             <div className="relative">
               <motion.div
                 animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.6, 0.3],
+                  scale: [1, 1.15, 1],
+                  opacity: [0.2, 0.4, 0.2],
                 }}
                 transition={{
-                  duration: 3,
+                  duration: 2.5,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
-                className="absolute inset-0 bg-red-500/30 rounded-full blur-3xl"
+                className="absolute -inset-4 bg-red-500/20 rounded-full blur-3xl"
               />
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-                <img
-                  src="/logo.png"
-                  alt="CoolieMate"
-                  className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<div class="text-white text-2xl sm:text-3xl md:text-4xl font-bold">CM</div>';
-                  }}
-                />
-              </div>
+              <motion.div
+                animate={{
+                  rotate: 360,
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-white rounded-3xl flex items-center justify-center shadow-2xl ring-1 ring-gray-200/50"
+              >
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="w-full h-full flex items-center justify-center"
+                >
+                  <img
+                    src="/logo.png"
+                    alt="CoolieMate"
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = '<div class="text-red-600 text-3xl sm:text-4xl md:text-5xl font-bold">CM</div>';
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
             </div>
           </motion.div>
 
@@ -201,17 +217,22 @@ const ProfessionalLoadingScreen = ({ onLoadingComplete }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.7 }}
-            className="text-center space-y-2"
+            className="text-center space-y-3"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight">
-              <span className="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-none">
+              <span className="bg-gradient-to-r from-red-600 via-red-500 to-red-600 bg-clip-text text-transparent">
                 Coolie
               </span>
               <span className="text-gray-900">Mate</span>
             </h1>
-            <p className="text-gray-600 text-base sm:text-lg font-medium px-2">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-gray-600 text-base sm:text-lg md:text-xl font-medium px-2 tracking-wide"
+            >
               Professional Porter Services
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* Progress Section */}
@@ -222,19 +243,19 @@ const ProfessionalLoadingScreen = ({ onLoadingComplete }) => {
             className="space-y-4"
           >
             {/* Modern progress bar */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 font-medium">Loading your experience</span>
-                <span className="text-red-600 font-bold tabular-nums">{Math.round(progress)}%</span>
+                <span className="text-gray-600 font-semibold">Loading your experience</span>
+                <span className="text-red-600 font-bold tabular-nums text-lg">{Math.round(progress)}%</span>
               </div>
               
-              <div className="relative h-2.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
                 <motion.div
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="absolute h-full bg-gradient-to-r from-red-500 via-red-600 to-red-500 rounded-full"
+                  className="absolute h-full bg-gradient-to-r from-red-500 via-red-600 to-red-500 rounded-full shadow-lg"
                   style={{
-                    boxShadow: "0 0 20px rgba(239, 68, 68, 0.5)",
+                    boxShadow: "0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3)",
                   }}
                 >
                   {/* Animated shimmer */}
@@ -243,11 +264,11 @@ const ProfessionalLoadingScreen = ({ onLoadingComplete }) => {
                       x: ["-100%", "200%"],
                     }}
                     transition={{
-                      duration: 2,
+                      duration: 1.5,
                       repeat: Infinity,
                       ease: "linear",
                     }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/70 to-transparent"
                     style={{ width: "50%" }}
                   />
                 </motion.div>

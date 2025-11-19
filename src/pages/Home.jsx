@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Briefcase, Shield, Smartphone, IndianRupee, Clock, Star, Users, Award, CheckCircle, ArrowRight, MapPin, Zap, Sparkles } from "lucide-react";
+import { Briefcase, Shield, Smartphone, IndianRupee, Clock, Star, Users, Award, CheckCircle, ArrowRight, MapPin, Zap, Sparkles, X, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
-import { motion, useScroll, useTransform, useSpring, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from "framer-motion";
 import * as THREE from 'three';
 
 const AnimatedCounter = ({ end, duration = 2 }) => {
@@ -128,6 +128,8 @@ const Home = () => {
   const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
   const scaleSpring = useSpring(scaleProgress, springConfig);
   const [showNotification, setShowNotification] = useState(false);
+  const [showProofModal, setShowProofModal] = useState(false);
+  
   const features = [
     { icon: Smartphone, title: "Advance Booking", description: "Book a certified coolie by entering your PNR number", color: "from-blue-500 to-cyan-500" },
     { icon: IndianRupee, title: "Standardized Rates", description: "No bargaining, just clear, fixed pricing", color: "from-emerald-500 to-teal-500" },
@@ -138,7 +140,7 @@ const Home = () => {
   const pricing = [
     { bags: "1-2 bags", weight: "≤20 kg", price: "₹99", description: "Perfect for solo travelers", popular: false },
     { bags: "3-4 bags", weight: "21-40 kg", price: "₹149", description: "Ideal for families", popular: true },
-    { bags: "Wheel Chair Support and Heavy Luggage", weight: "Used Cart", price: "₹199-₹399", description: "For heavy luggage", popular: false },
+    { bags: "Wheel Chair Support and Heavy Luggage", weight: "Used Cart", price: "₹180-₹399", description: "For heavy luggage", popular: false },
   ];
 
   const stats = [
@@ -168,36 +170,34 @@ const Home = () => {
     visible: { scale: 1, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } }
   };
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pb-0 overflow-x-hidden">
       <Navbar />
-
-      {/* Premium Hero Section */}
+ {/* Premium Hero Section - RED THEME */}
       <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16">
         <ThreeBackground />
         
         {/* Background image with dark overlay */}
-       <div className="absolute inset-0">
-  {/* Hide this image on mobile, show on medium (md) and above */}
-  <div 
-    className="absolute inset-0 bg-cover bg-center hidden md:block"
-    style={{
-      backgroundImage: `url('/img1.jpg')`,
-    }}
-  />
-  <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95" />
-</div>
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center hidden md:block"
+            style={{
+              backgroundImage: `url('/img1.jpg')`,
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95" />
+        </div>
 
-        
         {/* Subtle pattern overlay */}
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)`
         }} />
 
-        {/* Animated gradient orbs - matching your original blue theme */}
+        {/* Animated gradient orbs - RED THEME */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"
+            className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.2, 1],
               x: [0, 50, 0],
@@ -206,7 +206,7 @@ const Home = () => {
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
+            className="absolute bottom-20 right-10 w-96 h-96 bg-red-600/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.3, 1],
               x: [0, -50, 0],
@@ -215,7 +215,7 @@ const Home = () => {
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute top-1/2 left-1/2 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl"
+            className="absolute top-1/2 left-1/2 w-80 h-80 bg-red-500/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.25, 1],
               rotate: [0, 180, 360]
@@ -231,52 +231,53 @@ const Home = () => {
             animate="visible"
             variants={staggerContainer}
           >
-            {/* Premium Badge */}
+            {/* Premium Badge - RED THEME */}
             <motion.div variants={fadeUp}>
               <motion.div
                 className="inline-flex items-center gap-2.5 mb-8 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl"
-                whileHover={{ scale: 1.05, borderColor: 'rgba(59, 130, 246, 0.5)' }}
+                whileHover={{ scale: 1.05, borderColor: 'rgba(239, 68, 68, 0.5)' }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 >
-                  <Sparkles className="w-5 h-5 text-blue-400" />
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </motion.div>
-                <p className="text-blue-200 text-sm font-bold tracking-[0.2em] uppercase">
+                <p className="text-red-200 text-sm font-bold tracking-[0.2em] uppercase">
                   Premium Porter Services
                 </p>
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
                 >
-                  <Sparkles className="w-5 h-5 text-blue-400" />
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </motion.div>
               </motion.div>
             </motion.div>
 
-            {/* Main Heading */}
+            {/* Main Heading - RED THEME */}
             <motion.div variants={fadeUp}>
               <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tight px-4">
                 <span className="text-white block mb-2">Welcome to</span>
-                <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
+                <span className="bg-gradient-to-r from-red-100 via-red-300 to-red-600 bg-clip-text text-transparent inline-block">
                   CoolieMate
+                  {/* </span> */}
                 </span>
               </h1>
             </motion.div>
 
-            {/* Subtitle with elegant divider */}
+            {/* Subtitle with elegant divider - RED THEME */}
             <motion.div variants={fadeUp} className="flex items-center justify-center gap-4 mb-6">
               <motion.div 
-                className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-blue-400/50"
+                className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-red-400/50"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
               />
-              <Star className="w-5 h-5 text-blue-400 fill-blue-400" />
+              <Star className="w-5 h-5 text-red-400 fill-red-400" />
               <motion.div 
-                className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-blue-400/50"
+                className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-red-400/50"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
@@ -287,19 +288,19 @@ const Home = () => {
               variants={fadeUp}
               className="text-2xl sm:text-3xl lg:text-4xl mb-5 font-semibold px-4"
             >
-              <span className="text-blue-300">Your Personal Porter</span>
+              <span className="text-red-300">Your Personal Porter</span>
               <span className="text-gray-300"> Booking Platform</span>
             </motion.p>
 
-            {/* Description */}
+            {/* Description - RED THEME */}
             <motion.p 
               variants={fadeUp}
               className="text-base sm:text-lg lg:text-xl mb-12 text-gray-300 max-w-3xl mx-auto px-4 leading-relaxed"
             >
-              Experience <span className="text-blue-400 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
+              Experience <span className="text-red-400 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
             </motion.p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons - RED THEME */}
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-5 justify-center items-center px-4 mb-16">
               <Link to="/book" className="w-full sm:w-auto">
                 <motion.div 
@@ -307,10 +308,10 @@ const Home = () => {
                   whileTap={{ scale: 0.98 }}
                   className="relative group"
                 >
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-300" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-400 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-300" />
                   <Button
                     size="lg"
-                    className="relative font-bold text-lg px-10 py-7 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
+                    className="relative font-bold text-lg px-10 py-7 bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-800 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
                   >
                     Book a Porter Now
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -318,61 +319,45 @@ const Home = () => {
                 </motion.div>
               </Link>
               
-           <motion.div 
-  whileHover={{ scale: 1.05, y: -2 }} 
-  whileTap={{ scale: 0.98 }}
-  className="w-full sm:w-auto"
->
-  <Button
-    size="lg"
-    variant="outline"
-    onClick={() => setShowNotification(true)}
-    className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-blue-400/50 text-blue-300 hover:bg-white/10 hover:border-blue-400 rounded-xl w-full sm:w-auto transition-all duration-300"
-  >
-    Download Our App
-  </Button>
-</motion.div>
-
-{/* Toast notification */}
-{showNotification && (
-  <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-up">
-    🚧 This feature is still in development!
-    <button 
-      onClick={() => setShowNotification(false)}
-      className="ml-4 font-bold"
-    >
-      ×
-    </button>
-  </div>
-)}
-            </motion.div>
-
-            {/* Scroll Indicator */}
-            <motion.div
-              className="mt-20"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.5, duration: 0.8 }}
-            >
-              <motion.div
-                animate={{ y: [0, 12, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="inline-block"
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto"
               >
-                <div className="w-7 h-12 border-2 border-blue-400/40 rounded-full p-1.5 backdrop-blur-sm">
-                  <motion.div
-                    className="w-2 h-3 bg-gradient-to-b from-blue-400 to-cyan-500 rounded-full mx-auto"
-                    animate={{ y: [0, 16, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </div>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => setShowNotification(true)}
+                  className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-red-400/50 text-red-300 hover:bg-white/10 hover:border-red-400 rounded-xl w-full sm:w-auto transition-all duration-300"
+                >
+                  Download Our App
+                </Button>
               </motion.div>
-              <p className="text-blue-300/60 text-xs mt-3 font-medium tracking-wider">SCROLL TO EXPLORE</p>
             </motion.div>
+
+            {/* Toast notification - RED THEME */}
+            {showNotification && (
+              <motion.div 
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
+              >
+                🚧 This feature is still in development!
+                <button 
+                  onClick={() => setShowNotification(false)}
+                  className="ml-4 font-bold hover:text-red-100 transition-colors"
+                >
+                  ×
+                </button>
+              </motion.div>
+            )}
+
+            {/* Scroll Indicator - RED THEME */}
+            
           </motion.div>
         </div>
       </section>
-
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-20 relative">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -436,7 +421,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
+        {/* Pricing Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl" />
@@ -479,19 +464,6 @@ const Home = () => {
                 whileHover={{ scale: 1.05, y: -10 }}
                 className="relative"
               >
-                {/* {tier.popular && (
-                  <motion.div
-                    className="absolute -top-4 left-1/2 -translate-x-1/2 z-20"
-                    initial={{ scale: 0 }}
-                    whileInView={{ scale: 1 }}
-                    transition={{ delay: 0.5, type: "spring" }}
-                  >
-                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-bold shadow-lg">
-                      MOST POPULAR
-                    </div>
-                  </motion.div>
-                )} */}
-                
                 <div className={`bg-white rounded-3xl p-6 sm:p-8 shadow-xl h-full relative overflow-hidden ${tier.popular ? 'ring-2 sm:ring-4 ring-blue-500' : ''}`}>
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5"
@@ -531,12 +503,95 @@ const Home = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
           >
-            <p className="text-gray-700 font-medium text-sm sm:text-base">
+            <p className="text-gray-700 font-medium text-sm sm:text-base mb-4">
               <span className="font-bold text-blue-600">Additional charges:</span> Late night (11 PM - 5 AM) +₹20 | Priority service +₹30
             </p>
+            
+            {/* View Proof Button */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+  onClick={() => setShowProofModal(true)}
+  className="
+    w-full sm:w-auto
+    inline-flex items-center gap-2
+    bg-gradient-to-r from-blue-600 to-purple-600 
+    hover:from-blue-700 hover:to-purple-700 
+    text-white font-semibold
+
+    px-4 py-2 text-sm        /* mobile */
+    sm:px-6 sm:py-3 sm:text-base  /* desktop */
+
+    rounded-lg shadow-lg 
+    transition-all duration-300
+  "
+>
+  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+  <span className="text-center">View Proof of Prices as per IRCTC</span>
+</Button>
+
+            </motion.div>
           </motion.div>
         </div>
       </section>
+
+      {/* Price Proof Modal */}
+     <AnimatePresence>
+  {showProofModal && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4"
+      onClick={() => setShowProofModal(false)}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ type: "spring", duration: 0.45 }}
+        className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 sm:p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <FileText className="w-5 h-5 text-white" />
+            <h3 className="text-base sm:text-xl font-bold text-white">
+              IRCTC Price Proof
+            </h3>
+          </div>
+
+          <button
+            onClick={() => setShowProofModal(false)}
+            className="text-white hover:bg-white/20 rounded-full p-1.5 sm:p-2 transition-colors"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-3 sm:p-5 overflow-y-auto max-h-[calc(90vh-100px)]">
+          <div className="w-full">
+            <img
+              src="/proof.jpg"
+              alt="IRCTC Price Proof"
+              className="w-full h-auto rounded-lg shadow-sm object-contain"
+            />
+          </div>
+
+          <p className="mt-3 text-center text-[10px] sm:text-xs text-gray-500">
+            Screenshot from IRCTC on {new Date().toLocaleDateString()}
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
 
       {/* How It Works */}
       <section className="py-12 sm:py-16 lg:py-20 relative">
