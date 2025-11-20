@@ -174,6 +174,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pb-0 overflow-x-hidden">
       <Navbar />
+      
  {/* Premium Hero Section - RED THEME */}
       <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16">
         <ThreeBackground />
@@ -358,6 +359,39 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+      {/* Modern Scrolling Location Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-red-600 to-slate-900 py-3 overflow-hidden relative border-y border-red-500/20">
+        {/* Animated glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
+        
+        <motion.div
+          className="flex whitespace-nowrap"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ 
+            duration: 5, 
+            repeat: Infinity, 
+            ease: "linear",
+            repeatType: "loop"
+          }}
+        >
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="flex items-center mx-12 relative">
+              {/* Glowing dot */}
+              <div className="w-2 h-2 rounded-full bg-red-400 mr-4 animate-pulse shadow-lg shadow-red-500/50" />
+              
+              <MapPin className="w-5 h-5 text-red-400 mr-2.5 drop-shadow-lg" />
+              
+              <span className="text-white font-bold text-base tracking-wide uppercase bg-gradient-to-r from-white to-red-100 bg-clip-text text-transparent">
+                Available in only Kurnool
+              </span>
+              
+              {/* Decorative separator */}
+              <div className="w-px h-4 bg-red-400/30 ml-12" />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-20 relative">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
