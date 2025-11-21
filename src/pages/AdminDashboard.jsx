@@ -20,38 +20,67 @@ import {
   UserX,
   Phone,
   Hash,
-  MapPin
+  MapPin,
+  AlertCircle
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "./Footer";
 
 const API_BASE = 'https://cooliemate.onrender.com';
+
+// Analytics tracking utility
+const trackAnalytics = async (action = 'visit', page = window.location.pathname) => {
+  try {
+    const sessionId = sessionStorage.getItem('sessionId') || 
+                      Math.random().toString(36).substring(7);
+    sessionStorage.setItem('sessionId', sessionId);
+
+    await fetch(`${API_BASE}/api/analytics/track`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        page,
+        referrer: document.referrer,
+        sessionId,
+        timestamp: new Date().toISOString()
+      })
+    });
+  } catch (error) {
+    console.error('Analytics tracking failed:', error);
+  }
+};
 
 const AdminDashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [porters, setPorters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [portersLoading, setPortersLoading] = useState(false);
-  const [dateRange, setDateRange] = useState('all');
   const [activeTab, setActiveTab] = useState('analytics');
   const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Track page visit on mount
+    trackAnalytics('visit', '/admin/dashboard');
+    
     fetchAnalytics();
     fetchPorters();
-  }, [dateRange]);
+  }, []);
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`${API_BASE}/api/analytics/dashboard`);
       const data = await response.json();
       
       if (data.success) {
         setAnalytics(data.data);
+      } else {
+        setError(data.message || 'Failed to load analytics');
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      setError('Failed to connect to server');
     } finally {
       setLoading(false);
     }
@@ -64,7 +93,6 @@ const AdminDashboard = () => {
       const data = await response.json();
       
       if (data.success) {
-        console.log('Fetched porters:', data.porters);
         setPorters(data.porters);
       }
     } catch (error) {
@@ -75,9 +103,7 @@ const AdminDashboard = () => {
   };
 
   const deletePorter = async (porter) => {
-    // Validate porter object
     if (!porter || !porter._id) {
-      console.error('Invalid porter object:', porter);
       alert('Error: Porter ID not found');
       return;
     }
@@ -91,13 +117,10 @@ const AdminDashboard = () => {
 
     try {
       setDeletingId(porterId);
-      console.log('Attempting to delete porter with ID:', porterId);
 
       const response = await fetch(`${API_BASE}/api/admin/porter/${porterId}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       
       const data = await response.json();
@@ -145,12 +168,13 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!analytics) {
+  if (error || !analytics) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
+          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
           <p className="text-lg font-semibold mb-2">Failed to load analytics</p>
-          <p className="text-muted-foreground mb-4">Please check your connection</p>
+          <p className="text-muted-foreground mb-4">{error || 'Please check your connection'}</p>
           <Button onClick={fetchAnalytics}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again
@@ -162,7 +186,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-primary/5">
-      <Navbar/>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -207,161 +230,164 @@ const AdminDashboard = () => {
           <>
             {/* Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Eye className="w-8 h-8 text-blue-600" />
-                <Badge variant="secondary">Total</Badge>
-              </div>
-              <p className="text-3xl font-bold text-blue-600">
-                {analytics.overview.totalVisits}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">Total Visits</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Users className="w-8 h-8 text-purple-600" />
-                <Badge variant="secondary">Unique</Badge>
-              </div>
-              <p className="text-3xl font-bold text-purple-600">
-                {analytics.overview.uniqueVisitors}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">Unique Visitors</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
-                <Badge variant="secondary">Bookings</Badge>
-              </div>
-              <p className="text-3xl font-bold text-green-600">
-                {analytics.overview.totalBookings}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">Total Bookings</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <TrendingUp className="w-8 h-8 text-orange-600" />
-                <Badge variant="secondary">Rate</Badge>
-              </div>
-              <p className="text-3xl font-bold text-orange-600">
-                {analytics.overview.conversionRate}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">Conversion Rate</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-primary/10 to-primary/5">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <DollarSign className="w-8 h-8 text-primary" />
-                <Badge>Revenue</Badge>
-              </div>
-              <p className="text-3xl font-bold text-primary">
-                ₹{analytics.overview.totalRevenue}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">Total Revenue</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Bookings by Status */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>Bookings by Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(analytics.bookingsByStatus).map(([status, count]) => (
-                  <div key={status} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        status === 'completed' ? 'bg-green-500' :
-                        status === 'accepted' ? 'bg-blue-500' :
-                        status === 'pending' ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }`} />
-                      <span className="font-medium capitalize">{status}</span>
-                    </div>
-                    <Badge className={getStatusColor(status)}>{count}</Badge>
+              <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Eye className="w-8 h-8 text-blue-600" />
+                    <Badge variant="secondary">Total</Badge>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {analytics.overview.totalVisits.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Total Visits</p>
+                </CardContent>
+              </Card>
 
-          {/* Device Statistics */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>Device Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(analytics.deviceStats).map(([device, count]) => (
-                  <div key={device} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {getDeviceIcon(device)}
-                      <span className="font-medium capitalize">{device}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full"
-                          style={{ 
-                            width: `${(count / analytics.overview.totalVisits) * 100}%` 
-                          }}
-                        />
-                      </div>
-                      <Badge variant="secondary">{count}</Badge>
-                    </div>
+              <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <Users className="w-8 h-8 text-purple-600" />
+                    <Badge variant="secondary">Unique</Badge>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <p className="text-3xl font-bold text-purple-600">
+                    {analytics.overview.uniqueVisitors.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Unique Visitors</p>
+                </CardContent>
+              </Card>
 
-        {/* Top Rated Porters */}
-        {analytics.topPorters && analytics.topPorters.length > 0 && (
-          <Card className="shadow-lg mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-500" />
-                Top Rated Porters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {analytics.topPorters.map((porter, index) => (
-                  <Card key={porter._id} className="border-2 hover:shadow-md transition-shadow">
-                    <CardContent className="pt-6 text-center">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                        <span className="text-xl font-bold text-primary">#{index + 1}</span>
+              <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    <Badge variant="secondary">Bookings</Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-green-600">
+                    {analytics.overview.totalBookings.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Total Bookings</p>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <TrendingUp className="w-8 h-8 text-orange-600" />
+                    <Badge variant="secondary">Rate</Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-orange-600">
+                    {analytics.overview.conversionRate}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Conversion Rate</p>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-primary/10 to-primary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <DollarSign className="w-8 h-8 text-primary" />
+                    <Badge>Revenue</Badge>
+                  </div>
+                  <p className="text-3xl font-bold text-primary">
+                    ₹{analytics.overview.totalRevenue.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Total Revenue</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Bookings by Status */}
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle>Bookings by Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Object.entries(analytics.bookingsByStatus).map(([status, count]) => (
+                      <div key={status} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            status === 'completed' ? 'bg-green-500' :
+                            status === 'accepted' ? 'bg-blue-500' :
+                            status === 'pending' ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`} />
+                          <span className="font-medium capitalize">{status}</span>
+                        </div>
+                        <Badge className={getStatusColor(status)}>{count}</Badge>
                       </div>
-                      <h3 className="font-bold text-lg mb-1">{porter.porterName}</h3>
-                      <div className="flex items-center justify-center gap-1 mb-2">
-                        <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                        <span className="font-bold">{porter.avgRating.toFixed(1)}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {porter.totalReviews} reviews
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Device Statistics */}
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle>Device Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Object.entries(analytics.deviceStats).map(([device, count]) => {
+                      const total = Object.values(analytics.deviceStats).reduce((a, b) => a + b, 0);
+                      const percentage = total > 0 ? (count / total) * 100 : 0;
+                      
+                      return (
+                        <div key={device} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {getDeviceIcon(device)}
+                            <span className="font-medium capitalize">{device}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-primary h-2 rounded-full"
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <Badge variant="secondary">{count}</Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Rated Porters */}
+            {analytics.topPorters && analytics.topPorters.length > 0 && (
+              <Card className="shadow-lg mb-8">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-500" />
+                    Top Rated Porters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {analytics.topPorters.map((porter, index) => (
+                      <Card key={porter._id} className="border-2 hover:shadow-md transition-shadow">
+                        <CardContent className="pt-6 text-center">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                            <span className="text-xl font-bold text-primary">#{index + 1}</span>
+                          </div>
+                          <h3 className="font-bold text-lg mb-1">{porter.porterName}</h3>
+                          <div className="flex items-center justify-center gap-1 mb-2">
+                            <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                            <span className="font-bold">{porter.avgRating.toFixed(1)}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {porter.totalReviews} reviews
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Recent Bookings */}
             <Card className="shadow-lg">
@@ -515,17 +541,23 @@ const AdminDashboard = () => {
                         {porters.map((porter) => (
                           <tr key={porter._id} className="border-b hover:bg-muted/50">
                             <td className="py-3 px-4 font-medium">{porter.name}</td>
-                            <td className="py-3 px-4 flex items-center gap-2">
-                              <Phone className="w-4 h-4 text-muted-foreground" />
-                              {porter.phone || 'N/A'}
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Phone className="w-4 h-4 text-muted-foreground" />
+                                {porter.phone || 'N/A'}
+                              </div>
                             </td>
-                            <td className="py-3 px-4 flex items-center gap-2">
-                              <Hash className="w-4 h-4 text-muted-foreground" />
-                              {porter.badgeNumber}
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Hash className="w-4 h-4 text-muted-foreground" />
+                                {porter.badgeNumber}
+                              </div>
                             </td>
-                            <td className="py-3 px-4 flex items-center gap-2">
-                              <MapPin className="w-4 h-4 text-muted-foreground" />
-                              {porter.station}
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-muted-foreground" />
+                                {porter.station}
+                              </div>
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex gap-2">
@@ -567,7 +599,6 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
-      <Footer/>
     </div>
   );
 };
