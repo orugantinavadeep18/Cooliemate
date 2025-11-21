@@ -1,204 +1,132 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Briefcase, Shield, Smartphone, IndianRupee, Clock, Star, Users, Award, CheckCircle, ArrowRight, MapPin, Sparkles, X, FileText } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Briefcase, Shield, Smartphone, IndianRupee, Clock, Star, Users, Award, CheckCircle, ArrowRight, MapPin, Zap, Sparkles, X, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "../pages/Footer";
 import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from "framer-motion";
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-const Model3D = () => {
-  const mountRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const targetRotationRef = useRef({ x: 0, y: 0 });
+const AnimatedCounter = ({ end, duration = 2 }) => {
+  const [count, setCount] = useState(0);
+  const nodeRef = useRef(null);
+  const isInView = useInView(nodeRef, { once: true });
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+    if (!isInView) return;
+    
+    let startTime;
+    let animationFrame;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = (timestamp - startTime) / (duration * 1000);
+
+      if (progress < 1) {
+        setCount(Math.floor(end * progress));
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
     };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration, isInView]);
+
+  return <span ref={nodeRef}>{count.toLocaleString()}</span>;
+};
+
+const ThreeBackground = () => {
+  const mountRef = useRef(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
 
     const scene = new THREE.Scene();
-    
-    const width = isMobile ? window.innerWidth : window.innerWidth / 2;
-    const height = isMobile ? 450 : 700;
-    
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     
-    renderer.setSize(width, height);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.8;
     mountRef.current.appendChild(renderer.domElement);
 
-    // Brighter lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
-    scene.add(ambientLight);
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particleCount = 150;
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = [];
 
-    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 3);
-    directionalLight1.position.set(5, 5, 5);
-    scene.add(directionalLight1);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 25;
+      positions[i + 1] = (Math.random() - 0.5) * 25;
+      positions[i + 2] = (Math.random() - 0.5) * 25;
+      velocities.push({
+        x: (Math.random() - 0.5) * 0.015,
+        y: (Math.random() - 0.5) * 0.015,
+        z: (Math.random() - 0.5) * 0.015
+      });
+    }
 
-    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 2);
-    directionalLight2.position.set(-5, -5, -5);
-    scene.add(directionalLight2);
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particlesMaterial = new THREE.PointsMaterial({
+      color: 0x3b82f6,
+      size: 0.15,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending
+    });
 
-    const directionalLight3 = new THREE.DirectionalLight(0xffffff, 2);
-    directionalLight3.position.set(0, 10, 0);
-    scene.add(directionalLight3);
+    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particles);
 
-    const pointLight1 = new THREE.PointLight(0xffffff, 2.5, 100);
-    pointLight1.position.set(10, 10, 10);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(0xffffff, 2, 100);
-    pointLight2.position.set(-10, -10, -10);
-    scene.add(pointLight2);
-
-    let model = null;
-    let animationFrameId;
-    let baseY = 0;
-
-    const loader = new GLTFLoader();
-    loader.load(
-      '/original1.glb',
-      (gltf) => {
-        model = gltf.scene;
-        
-        // Make materials brighter
-        model.traverse((child) => {
-          if (child.isMesh && child.material) {
-            child.material.emissiveIntensity = 0.2;
-            if (child.material.color) {
-              child.material.color.multiplyScalar(1.3);
-            }
-          }
-        });
-        
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = isMobile ? 4 : 6;  // BIGGER SIZE
-        const finalScale = scale / maxDim;
-        model.scale.set(finalScale, finalScale, finalScale);
-        
-        model.position.x = -center.x * finalScale;
-        model.position.y = -center.y * finalScale;
-        model.position.z = -center.z * finalScale;
-        baseY = model.position.y;
-        
-        scene.add(model);
-      },
-      (xhr) => {
-        if (xhr.total > 0) {
-          console.log(`Loading: ${(xhr.loaded / xhr.total * 100).toFixed(2)}%`);
-        }
-      },
-      (error) => {
-        console.error('Error loading model:', error);
-      }
-    );
-
-    camera.position.z = isMobile ? 4 : 5;  // CLOSER CAMERA
-
-    // Mouse move handler for subtle rotation
-    const handleMouseMove = (e) => {
-      const rect = mountRef.current.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-      
-      targetRotationRef.current.x = y * 0.1;
-      targetRotationRef.current.y = x * 0.15;
-    };
-
-    // Touch handler for mobile
-    const handleTouchMove = (e) => {
-      if (e.touches.length > 0) {
-        const rect = mountRef.current.getBoundingClientRect();
-        const x = ((e.touches[0].clientX - rect.left) / rect.width) * 2 - 1;
-        const y = ((e.touches[0].clientY - rect.top) / rect.height) * 2 - 1;
-        
-        targetRotationRef.current.x = y * 0.1;
-        targetRotationRef.current.y = x * 0.15;
-      }
-    };
-
-    const handleMouseLeave = () => {
-      targetRotationRef.current.x = 0;
-      targetRotationRef.current.y = 0;
-    };
-
-    mountRef.current.addEventListener('mousemove', handleMouseMove);
-    mountRef.current.addEventListener('touchmove', handleTouchMove);
-    mountRef.current.addEventListener('mouseleave', handleMouseLeave);
-    mountRef.current.addEventListener('touchend', handleMouseLeave);
+    camera.position.z = 5;
 
     const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
 
-      if (model) {
-        // Floating animation only
-        model.position.y = baseY + Math.sin(Date.now() * 0.002) * 0.12;
-        
-        // Smooth rotation towards target (cursor-based)
-        model.rotation.x += (targetRotationRef.current.x - model.rotation.x) * 0.05;
-        model.rotation.y += (targetRotationRef.current.y - model.rotation.y) * 0.05;
+      const positions = particles.geometry.attributes.position.array;
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] += velocities[i].x;
+        positions[i * 3 + 1] += velocities[i].y;
+        positions[i * 3 + 2] += velocities[i].z;
+
+        if (Math.abs(positions[i * 3]) > 12) velocities[i].x *= -1;
+        if (Math.abs(positions[i * 3 + 1]) > 12) velocities[i].y *= -1;
+        if (Math.abs(positions[i * 3 + 2]) > 12) velocities[i].z *= -1;
       }
+      particles.geometry.attributes.position.needsUpdate = true;
 
+      particles.rotation.y += 0.0005;
+      particles.rotation.x += 0.0003;
       renderer.render(scene, camera);
     };
 
     animate();
 
     const handleResize = () => {
-      const newWidth = isMobile ? window.innerWidth : window.innerWidth / 2;
-      const newHeight = isMobile ? 450 : 700;
-      camera.aspect = newWidth / newHeight;
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(newWidth, newHeight);
+      renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (mountRef.current) {
-        mountRef.current.removeEventListener('mousemove', handleMouseMove);
-        mountRef.current.removeEventListener('touchmove', handleTouchMove);
-        mountRef.current.removeEventListener('mouseleave', handleMouseLeave);
-        mountRef.current.removeEventListener('touchend', handleMouseLeave);
-      }
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-      scene.clear();
+      mountRef.current?.removeChild(renderer.domElement);
     };
-  }, [isMobile]);
+  }, []);
 
-  return (
-    <div 
-      ref={mountRef} 
-      className={`${isMobile ? 'w-full h-[450px] flex justify-center items-center' : 'absolute right-0 top-1/2 -translate-y-1/2 w-1/2 h-[700px]'} pointer-events-auto`}
-      style={{ touchAction: 'pan-y' }}
-    />
-  );
+  return <div ref={mountRef} className="absolute inset-0 pointer-events-none" />;
 };
+
 const Home = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleProgress = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
+  const opacityProgress = useTransform(scrollYProgress, [0, 0.3], [1, 0.7]);
+  const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+  const scaleSpring = useSpring(scaleProgress, springConfig);
   const [showNotification, setShowNotification] = useState(false);
   const [showProofModal, setShowProofModal] = useState(false);
   
@@ -215,9 +143,21 @@ const Home = () => {
     { bags: "Wheel Chair Support and Heavy Luggage", weight: "Used Cart", price: "₹180-₹399", description: "For heavy luggage", popular: false },
   ];
 
+  const stats = [
+    { value: 5000, label: "Happy Travelers", icon: Users },
+    { value: 150, label: "Verified Porters", icon: Shield },
+    { value: 98, label: "% Satisfaction", icon: Star, suffix: "%" },
+    { value: 10000, label: "Bags Carried", icon: Briefcase },
+  ];
+
   const fadeUp = { 
     hidden: { opacity: 0, y: 60 }, 
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.6, -0.05, 0.01, 0.99] } } 
+  };
+
+  const fadeIn = { 
+    hidden: { opacity: 0 }, 
+    visible: { opacity: 1, transition: { duration: 0.8 } } 
   };
 
   const staggerContainer = { 
@@ -230,21 +170,35 @@ const Home = () => {
     visible: { scale: 1, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } }
   };
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pb-0 overflow-x-hidden">
       <Navbar />
       
-      <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16 bg-white">
-        {/* Desktop Model - positioned absolutely */}
-        <div className="hidden lg:block ">
-          <Model3D />
+ {/* Premium Hero Section - RED THEME */}
+      <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16">
+        <ThreeBackground />
+        
+        {/* Background image with dark overlay */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center hidden md:block"
+            style={{
+              backgroundImage: `url('/img1.jpg')`,
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 md:hidden" />
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-red-50/30 pointer-events-none" />
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)`
+        }} />
 
+        {/* Animated gradient orbs - RED THEME */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-20 left-10 w-48 h-48 sm:w-72 sm:h-72 bg-blue-400/5 rounded-full blur-3xl"
+            className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.2, 1],
               x: [0, 50, 0],
@@ -253,7 +207,7 @@ const Home = () => {
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute bottom-20 right-10 w-64 h-64 sm:w-96 sm:h-96 bg-red-400/5 rounded-full blur-3xl"
+            className="absolute bottom-20 right-10 w-96 h-96 bg-red-600/10 rounded-full blur-3xl"
             animate={{ 
               scale: [1, 1.3, 1],
               x: [0, -50, 0],
@@ -261,167 +215,184 @@ const Home = () => {
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-80 h-80 bg-red-500/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.25, 1],
+              rotate: [0, 180, 360]
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          />
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={staggerContainer}
-              className="text-left"
-            >
-              <motion.div variants={fadeUp}>
+          <motion.div
+            className="max-w-6xl mx-auto text-center"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            {/* Premium Badge - RED THEME */}
+            <motion.div variants={fadeUp}>
+              <motion.div
+                className="inline-flex items-center gap-2.5 mb-8 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl"
+                whileHover={{ scale: 1.05, borderColor: 'rgba(239, 68, 68, 0.5)' }}
+                transition={{ duration: 0.3 }}
+              >
                 <motion.div
-                  className="inline-flex items-center gap-1.5 sm:gap-2.5 mb-6 sm:mb-8 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-50 to-red-50 rounded-full border border-blue-200 shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 >
-                  <motion.div
-                    animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                  </motion.div>
-                  <p className="text-gray-800 text-xs sm:text-sm font-bold tracking-wider sm:tracking-[0.2em] uppercase">
-                    Premium Porter Services
-                  </p>
-                  <motion.div
-                    animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
-                  >
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
-                  </motion.div>
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </motion.div>
-              </motion.div>
-
-              <motion.div variants={fadeUp}>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 sm:mb-6 leading-tight">
-                  <span className="text-gray-900 block mb-2">Welcome to</span>
-                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 bg-clip-text text-transparent inline-block">
-                    CoolieMate
-                  </span>
-                </h1>
-              </motion.div>
-
-              <motion.div variants={fadeUp} className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <motion.div 
-                  className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-blue-400"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                />
-                <Star className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 fill-red-500" />
-                <motion.div 
-                  className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-red-400"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                />
-              </motion.div>
-
-              <motion.p 
-                variants={fadeUp}
-                className="text-2xl sm:text-3xl lg:text-4xl mb-4 sm:mb-5 font-semibold"
-              >
-                <span className="text-blue-600">Your Personal Porter</span>
-                <span className="text-gray-700"> Booking Platform</span>
-              </motion.p>
-
-              {/* Hidden on mobile */}
-              <motion.p 
-                variants={fadeUp}
-                className="hidden sm:block text-base sm:text-lg lg:text-xl mb-8 sm:mb-12 text-gray-600 max-w-2xl leading-relaxed"
-              >
-                Experience <span className="text-red-600 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
-              </motion.p>
-
-              {/* Mobile Model - shown in flow */}
-              <div className="lg:hidden mb-6">
-                <Model3D />
-              </div>
-
-              <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-stretch sm:items-start">
-                <Link to="/book" className="w-full sm:w-auto">
-                  <motion.div 
-                    whileHover={{ scale: 1.05, y: -2 }} 
-                    whileTap={{ scale: 0.98 }}
-                    className="relative group"
-                  >
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-red-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-300" />
-                    <Button
-                      size="lg"
-                      className="relative font-bold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-7 bg-gradient-to-r from-blue-600 to-red-600 hover:from-blue-700 hover:to-red-700 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
-                    >
-                      Book a Porter Now
-                      <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </motion.div>
-                </Link>
-                
-                <motion.div 
-                  whileHover={{ scale: 1.05, y: -2 }} 
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full sm:w-auto"
+                <p className="text-red-200 text-sm font-bold tracking-[0.2em] uppercase">
+                  Premium Porter Services
+                </p>
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
                 >
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() => setShowNotification(true)}
-                    className="font-semibold text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-7 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-blue-400 rounded-xl w-full sm:w-auto transition-all duration-300"
-                  >
-                    Download Our App
-                  </Button>
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </motion.div>
               </motion.div>
             </motion.div>
 
-            <div className="hidden lg:block relative h-[600px]">
-              {/* Desktop model is positioned absolutely */}
-            </div>
-          </div>
+            {/* Main Heading - RED THEME */}
+            <motion.div variants={fadeUp}>
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tight px-4">
+                <span className="text-white block mb-2">Welcome to</span>
+                <span className="bg-gradient-to-r from-red-100 via-red-300 to-red-600 bg-clip-text text-transparent inline-block">
+                  CoolieMate
+                  {/* </span> */}
+                </span>
+              </h1>
+            </motion.div>
 
-          <AnimatePresence>
+            {/* Subtitle with elegant divider - RED THEME */}
+            <motion.div variants={fadeUp} className="flex items-center justify-center gap-4 mb-6">
+              <motion.div 
+                className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-red-400/50"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              />
+              <Star className="w-5 h-5 text-red-400 fill-red-400" />
+              <motion.div 
+                className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-red-400/50"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              />
+            </motion.div>
+
+            <motion.p 
+              variants={fadeUp}
+              className="text-2xl sm:text-3xl lg:text-4xl mb-5 font-semibold px-4"
+            >
+              <span className="text-red-300">Your Personal Porter</span>
+              <span className="text-gray-300"> Booking Platform</span>
+            </motion.p>
+
+            {/* Description - RED THEME */}
+            <motion.p 
+              variants={fadeUp}
+              className="text-base sm:text-lg lg:text-xl mb-12 text-gray-300 max-w-3xl mx-auto px-4 leading-relaxed"
+            >
+              Experience <span className="text-red-400 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
+            </motion.p>
+
+            {/* CTA Buttons - RED THEME */}
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-5 justify-center items-center px-4 mb-16">
+              <Link to="/book" className="w-full sm:w-auto">
+                <motion.div 
+                  whileHover={{ scale: 1.05, y: -2 }} 
+                  whileTap={{ scale: 0.98 }}
+                  className="relative group"
+                >
+                  <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-400 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-300" />
+                  <Button
+                    size="lg"
+                    className="relative font-bold text-lg px-10 py-7 bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-800 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
+                  >
+                    Book a Porter Now
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </motion.div>
+              </Link>
+              
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -2 }} 
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => setShowNotification(true)}
+                  className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-red-400/50 text-red-300 hover:bg-white/10 hover:border-red-400 rounded-xl w-full sm:w-auto transition-all duration-300"
+                >
+                  Download Our App
+                </Button>
+              </motion.div>
+            </motion.div>
+
+            {/* Toast notification - RED THEME */}
             {showNotification && (
               <motion.div 
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto bg-gradient-to-r from-blue-500 to-red-500 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg z-50 flex items-center justify-between"
+                className="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50"
               >
-                <span className="text-sm sm:text-base">🚧 This feature is still in development!</span>
+                🚧 This feature is still in development!
                 <button 
                   onClick={() => setShowNotification(false)}
-                  className="ml-3 sm:ml-4 font-bold hover:text-gray-100 transition-colors text-xl"
+                  className="ml-4 font-bold hover:text-red-100 transition-colors"
                 >
                   ×
                 </button>
               </motion.div>
             )}
-          </AnimatePresence>
+
+            {/* Scroll Indicator - RED THEME */}
+            
+          </motion.div>
         </div>
       </section>
-
-      {/* Rest of your code remains the same... */}
-
-      <div className="bg-gradient-to-r from-slate-900 via-red-600 to-slate-900 py-2 sm:py-3 overflow-hidden relative border-y border-red-500/20">
+      {/* Modern Scrolling Location Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-red-600 to-slate-900 py-3 overflow-hidden relative border-y border-red-500/20">
+        {/* Animated glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
+        
         <motion.div
           className="flex whitespace-nowrap"
           animate={{ x: ["0%", "-50%"] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          transition={{ 
+            duration: 5, 
+            repeat: Infinity, 
+            ease: "linear",
+            repeatType: "loop"
+          }}
         >
           {[...Array(20)].map((_, i) => (
-            <div key={i} className="flex items-center mx-8 sm:mx-12">
-              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 mr-2" />
-              <span className="text-white font-semibold text-sm sm:text-base">
-                Available in Kurnool
+            <div key={i} className="flex items-center mx-12 relative">
+              {/* Glowing dot */}
+              <div className="w-2 h-2 rounded-full bg-red-400 mr-4 animate-pulse shadow-lg shadow-red-500/50" />
+              
+              <MapPin className="w-5 h-5 text-red-400 mr-2.5 drop-shadow-lg" />
+              
+              <span className="text-white font-bold text-base tracking-wide uppercase bg-gradient-to-r from-white to-red-100 bg-clip-text text-transparent">
+                Available in only Kurnool
               </span>
+              
+              {/* Decorative separator */}
+              <div className="w-px h-4 bg-red-400/30 ml-12" />
             </div>
           ))}
         </motion.div>
       </div>
 
+      {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-20 relative">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -484,6 +455,7 @@ const Home = () => {
         </div>
       </section>
 
+        {/* Pricing Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl" />
@@ -569,27 +541,42 @@ const Home = () => {
               <span className="font-bold text-blue-600">Additional charges:</span> Late night (11 PM - 5 AM) +₹20 | Priority service +₹30
             </p>
             
+            {/* View Proof Button */}
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Button
-                onClick={() => setShowProofModal(true)}
-                className="w-full sm:w-auto inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-4 py-2 text-sm sm:px-6 sm:py-3 sm:text-base rounded-lg shadow-lg transition-all duration-300"
-              >
-                <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="text-center">View Proof of Prices as per IRCTC</span>
-              </Button>
+  onClick={() => setShowProofModal(true)}
+  className="
+    w-full sm:w-auto
+    inline-flex items-center gap-2
+    bg-gradient-to-r from-blue-600 to-purple-600 
+    hover:from-blue-700 hover:to-purple-700 
+    text-white font-semibold
+
+    px-4 py-2 text-sm        /* mobile */
+    sm:px-6 sm:py-3 sm:text-base  /* desktop */
+
+    rounded-lg shadow-lg 
+    transition-all duration-300
+  "
+>
+  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+  <span className="text-center">View Proof of Prices as per IRCTC</span>
+</Button>
+
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      <AnimatePresence>
-        {showProofModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+      {/* Price Proof Modal */}
+     <AnimatePresence>
+  {showProofModal && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4"
       onClick={() => setShowProofModal(false)}
