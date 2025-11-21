@@ -44,98 +44,34 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ MongoDB Connected to cooliemate database'))
 .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
+// ==================== SCHEMAS ====================
+
 // Porter Schema
 const porterSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  phone: {
-    type: String,
-    required: true,
-    unique: true,
-    match: /^[0-9]{10}$/
-  },
-  badgeNumber: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
-  },
-  station: {
-    type: String,
-    required: true,
-    default: 'Kurnool Station'
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-  image: {
-    type: String,
-    required: true
-  },
-  isVerified: {
-    type: Boolean,
-    default: true
-  },
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
-  lastSeen: {
-    type: Date,
-    default: Date.now
-  },
-  rating: {
-    type: Number,
-    default: 5.0,
-    min: 0,
-    max: 5
-  },
-  totalTrips: {
-    type: Number,
-    default: 0
-  },
-  experience: {
-    type: String,
-    default: '1 year'
-  },
-  languages: {
-    type: [String],
-    default: ['English', 'Hindi']
-  },
-  specialization: {
-    type: String,
-    default: 'General Luggage'
-  },
-  registeredAt: {
-    type: Date,
-    default: Date.now
-  }
+  name: { type: String, required: true, trim: true },
+  phone: { type: String, required: true, unique: true, match: /^[0-9]{10}$/ },
+  badgeNumber: { type: String, required: true, unique: true, trim: true },
+  station: { type: String, required: true, default: 'Kurnool Station' },
+  password: { type: String, required: true, minlength: 6 },
+  image: { type: String, required: true },
+  isVerified: { type: Boolean, default: true },
+  isOnline: { type: Boolean, default: false },
+  lastSeen: { type: Date, default: Date.now },
+  rating: { type: Number, default: 5.0, min: 0, max: 5 },
+  totalTrips: { type: Number, default: 0 },
+  experience: { type: String, default: '1 year' },
+  languages: { type: [String], default: ['English', 'Hindi'] },
+  specialization: { type: String, default: 'General Luggage' },
+  registeredAt: { type: Date, default: Date.now }
 });
 
-// Booking Schema - UPDATED with porterBadgeNumber
+// Booking Schema
 const bookingSchema = new mongoose.Schema({
-  porterId: {
-    type: String,
-    required: true
-  },
-  porterBadgeNumber: String, // ADDED: For reference
-  porterName: {
-    type: String,
-    required: true
-  },
-  passengerName: {
-    type: String,
-    required: true
-  },
-  phone: {
-    type: String,
-    required: true
-  },
+  porterId: { type: String, required: true },
+  porterBadgeNumber: String,
+  porterName: { type: String, required: true },
+  passengerName: { type: String, required: true },
+  phone: { type: String, required: true },
   pnr: String,
   station: String,
   trainNo: String,
@@ -158,45 +94,40 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'accepted', 'declined', 'completed'],
     default: 'pending'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
 // Review Schema
 const reviewSchema = new mongoose.Schema({
-  bookingId: {
-    type: String,
-    required: true
-  },
+  bookingId: { type: String, required: true },
   userName: String,
   userPhone: String,
-  rating: {
-    type: Number,
-    required: true,
-    min: 1,
-    max: 5
-  },
+  rating: { type: Number, required: true, min: 1, max: 5 },
   comment: String,
   experience: String,
   porterRating: Number,
   porterId: String,
   porterName: String,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+  createdAt: { type: Date, default: Date.now }
+});
+
+// **NEW: Analytics Schema for tracking visits**
+const analyticsSchema = new mongoose.Schema({
+  visitorId: { type: String, required: true },
+  ipAddress: String,
+  userAgent: String,
+  device: { type: String, enum: ['mobile', 'tablet', 'desktop'], default: 'desktop' },
+  page: String,
+  referrer: String,
+  timestamp: { type: Date, default: Date.now },
+  sessionId: String,
+  action: { type: String, enum: ['visit', 'booking', 'porter_view'], default: 'visit' }
 });
 
 // Hash password before saving
 porterSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -206,7 +137,6 @@ porterSchema.pre('save', async function(next) {
   }
 });
 
-// Method to compare password
 porterSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
@@ -214,12 +144,61 @@ porterSchema.methods.comparePassword = async function(candidatePassword) {
 const Porter = mongoose.model('Porter', porterSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
 const Review = mongoose.model('Review', reviewSchema);
+const Analytics = mongoose.model('Analytics', analyticsSchema);
+
+// ==================== HELPER FUNCTIONS ====================
+
+// Detect device type from user agent
+function detectDevice(userAgent) {
+  if (!userAgent) return 'desktop';
+  const ua = userAgent.toLowerCase();
+  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobile))/i.test(ua)) {
+    return 'tablet';
+  }
+  if (/mobile|android|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua)) {
+    return 'mobile';
+  }
+  return 'desktop';
+}
+
+// Generate visitor ID from IP and user agent
+function generateVisitorId(ip, userAgent) {
+  const crypto = require('crypto');
+  return crypto.createHash('md5').update(ip + userAgent).digest('hex');
+}
+
+// ==================== MIDDLEWARE ====================
+
+// **NEW: Visitor tracking middleware**
+app.use(async (req, res, next) => {
+  // Only track page visits, not API calls to other endpoints
+  if (req.path.startsWith('/api/') && !req.path.startsWith('/api/analytics/track')) {
+    return next();
+  }
+
+  try {
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const userAgent = req.headers['user-agent'] || '';
+    const visitorId = generateVisitorId(ipAddress, userAgent);
+    const device = detectDevice(userAgent);
+
+    // Store visitor info in request for later use
+    req.visitorInfo = {
+      visitorId,
+      ipAddress,
+      userAgent,
+      device
+    };
+  } catch (error) {
+    console.error('Visitor tracking error:', error);
+  }
+  
+  next();
+});
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
+  destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'porter-' + uniqueSuffix + path.extname(file.originalname));
@@ -233,7 +212,6 @@ const upload = multer({
     const allowedTypes = /jpeg|jpg|png|gif/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-    
     if (extname && mimetype) {
       cb(null, true);
     } else {
@@ -266,11 +244,163 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Routes
+// ==================== ROUTES ====================
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
+});
+
+// **NEW: Track visitor analytics**
+app.post('/api/analytics/track', async (req, res) => {
+  try {
+    const { page, action, referrer, sessionId } = req.body;
+    const { visitorId, ipAddress, userAgent, device } = req.visitorInfo || {};
+
+    if (!visitorId) {
+      return res.status(400).json({ success: false, message: 'Visitor info missing' });
+    }
+
+    const analyticsEntry = new Analytics({
+      visitorId,
+      ipAddress,
+      userAgent,
+      device,
+      page: page || '/',
+      referrer: referrer || '',
+      action: action || 'visit',
+      sessionId: sessionId || visitorId,
+      timestamp: new Date()
+    });
+
+    await analyticsEntry.save();
+    
+    res.json({ success: true, message: 'Analytics tracked' });
+  } catch (error) {
+    console.error('Analytics tracking error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// **UPDATED: Analytics endpoint with real data**
+app.get('/api/analytics/dashboard', async (req, res) => {
+  try {
+    console.log('📊 Fetching real analytics data...');
+    
+    // Get total visits
+    const totalVisits = await Analytics.countDocuments({ action: 'visit' });
+    
+    // Get unique visitors (count distinct visitorIds)
+    const uniqueVisitors = await Analytics.distinct('visitorId');
+    
+    // Get total bookings
+    const totalBookings = await Booking.countDocuments();
+    
+    // Calculate conversion rate
+    const conversionRate = uniqueVisitors.length > 0 
+      ? ((totalBookings / uniqueVisitors.length) * 100).toFixed(1) + '%'
+      : '0%';
+    
+    // Get total revenue from completed bookings
+    const revenueData = await Booking.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$totalPrice' } } }
+    ]);
+    const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
+    
+    // Get bookings by status
+    const bookingsByStatus = await Booking.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    
+    const statusCounts = {
+      completed: 0,
+      accepted: 0,
+      pending: 0,
+      declined: 0
+    };
+    bookingsByStatus.forEach(item => {
+      statusCounts[item._id] = item.count;
+    });
+    
+    // Get device statistics
+    const deviceStats = await Analytics.aggregate([
+      { $group: { _id: '$device', count: { $sum: 1 } } }
+    ]);
+    
+    const deviceCounts = { mobile: 0, desktop: 0, tablet: 0 };
+    deviceStats.forEach(item => {
+      deviceCounts[item._id] = item.count;
+    });
+    
+    // Get top rated porters with actual reviews
+    const topPorters = await Review.aggregate([
+      {
+        $group: {
+          _id: '$porterId',
+          porterName: { $first: '$porterName' },
+          avgRating: { $avg: '$porterRating' },
+          totalReviews: { $sum: 1 }
+        }
+      },
+      { $sort: { avgRating: -1 } },
+      { $limit: 5 }
+    ]);
+    
+    // Get recent bookings
+    const recentBookings = await Booking.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('_id passengerName phone station trainNo status totalPrice createdAt')
+      .lean();
+    
+    const analytics = {
+      overview: {
+        totalVisits: totalVisits,
+        uniqueVisitors: uniqueVisitors.length,
+        totalBookings: totalBookings,
+        conversionRate: conversionRate,
+        totalRevenue: totalRevenue
+      },
+      bookingsByStatus: statusCounts,
+      deviceStats: deviceCounts,
+      topPorters: topPorters.map(porter => ({
+        _id: porter._id,
+        porterName: porter.porterName,
+        avgRating: parseFloat(porter.avgRating.toFixed(1)),
+        totalReviews: porter.totalReviews
+      })),
+      recentBookings: recentBookings.map(booking => ({
+        id: booking._id.toString().substring(0, 8),
+        passengerName: booking.passengerName,
+        phone: booking.phone,
+        station: booking.station,
+        trainNo: booking.trainNo,
+        status: booking.status,
+        totalPrice: booking.totalPrice,
+        requestedAt: booking.createdAt
+      }))
+    };
+    
+    console.log('✅ Real analytics data fetched successfully');
+    console.log(`   Total Visits: ${totalVisits}`);
+    console.log(`   Unique Visitors: ${uniqueVisitors.length}`);
+    console.log(`   Total Bookings: ${totalBookings}`);
+    console.log(`   Conversion Rate: ${conversionRate}`);
+    
+    res.json({
+      success: true,
+      data: analytics
+    });
+    
+  } catch (error) {
+    console.error('❌ Analytics Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching analytics data',
+      error: error.message
+    });
+  }
 });
 
 // Debug endpoint to check specific porter
@@ -279,10 +409,7 @@ app.get('/api/porter/debug/:identifier', async (req, res) => {
     const { identifier } = req.params;
     
     const porter = await Porter.findOne({
-      $or: [
-        { phone: identifier },
-        { badgeNumber: identifier }
-      ]
+      $or: [{ phone: identifier }, { badgeNumber: identifier }]
     });
     
     if (!porter) {
@@ -309,7 +436,7 @@ app.get('/api/porter/debug/:identifier', async (req, res) => {
   }
 });
 
-// ADDED: Debug endpoint to check porter online status
+// Debug endpoint to check porter online status
 app.get('/api/porters/debug', async (req, res) => {
   try {
     const allPorters = await Porter.find({})
@@ -324,6 +451,7 @@ app.get('/api/porters/debug', async (req, res) => {
       online: onlinePorters.length,
       offline: allPorters.length - onlinePorters.length,
       porters: allPorters.map(p => ({
+        _id: p._id,
         name: p.name,
         phone: p.phone,
         badgeNumber: p.badgeNumber,
@@ -359,14 +487,11 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
       });
     }
 
-    console.log('📷 Image uploaded:', req.file.filename);
-
     const existingPorter = await Porter.findOne({
       $or: [{ phone }, { badgeNumber }]
     });
 
     if (existingPorter) {
-      // Delete uploaded file if porter already exists
       const filePath = path.join(__dirname, 'uploads', req.file.filename);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
@@ -413,7 +538,6 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   } catch (error) {
     console.error('❌ Registration Error:', error);
     
-    // Delete uploaded file if there's an error
     if (req.file) {
       const filePath = path.join(__dirname, 'uploads', req.file.filename);
       if (fs.existsSync(filePath)) {
@@ -429,12 +553,11 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   }
 });
 
-// Login Porter - UPDATED to use mobile number with backward compatibility
+// Login Porter
 app.post('/api/porter/login', async (req, res) => {
   try {
     const { phone, badgeNumber, password } = req.body;
 
-    // Support both old (badgeNumber) and new (phone) login methods
     const loginField = phone || badgeNumber;
     const loginType = phone ? 'mobile' : 'badge';
 
@@ -447,7 +570,6 @@ app.post('/api/porter/login', async (req, res) => {
       });
     }
 
-    // Validate phone number format if using phone login
     if (phone && !/^[0-9]{10}$/.test(phone)) {
       return res.status(400).json({
         success: false,
@@ -455,23 +577,17 @@ app.post('/api/porter/login', async (req, res) => {
       });
     }
 
-    // Find porter by phone or badgeNumber
-    // Priority: phone number first, then badgeNumber
     let porter = null;
     
     if (phone) {
-      // Try to find by phone number first
       porter = await Porter.findOne({ phone: loginField });
-      console.log(`🔍 Searching by phone ${loginField}:`, porter ? 'Found' : 'Not found');
     }
     
     if (!porter) {
-      // Fallback to badgeNumber search
       porter = await Porter.findOne({ badgeNumber: loginField });
-      console.log(`🔍 Searching by badgeNumber ${loginField}:`, porter ? 'Found' : 'Not found');
     }
+
     if (!porter) {
-      console.log('❌ Porter not found');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -480,7 +596,6 @@ app.post('/api/porter/login', async (req, res) => {
 
     const isMatch = await porter.comparePassword(password);
     if (!isMatch) {
-      console.log('❌ Password mismatch');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -493,13 +608,11 @@ app.post('/api/porter/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // CRITICAL: Set isOnline to true
     porter.isOnline = true;
     porter.lastSeen = Date.now();
     await porter.save();
 
-    console.log(`✅ Login successful - Porter ${porter.name} is now ONLINE at ${porter.station}`);
-    console.log(`   Badge: ${porter.badgeNumber}, isOnline: ${porter.isOnline}`);
+    console.log(`✅ Login successful - Porter ${porter.name} is now ONLINE`);
 
     res.json({
       success: true,
@@ -531,7 +644,7 @@ app.post('/api/porter/login', async (req, res) => {
   }
 });
 
-// Get Porter Profile (Protected Route)
+// Get Porter Profile
 app.get('/api/porter/profile', authenticateToken, async (req, res) => {
   try {
     const porter = await Porter.findById(req.porter.id).select('-password');
@@ -558,35 +671,29 @@ app.get('/api/porter/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Get available (online) porters for booking - UPDATED with better logging and case-insensitive station
+// Get available porters
 app.get('/api/porters/available', async (req, res) => {
   try {
     const { station } = req.query;
     
     let query = { isOnline: true, isVerified: true };
     if (station) {
-      // Case-insensitive station search
       query.station = { $regex: new RegExp(`^${station}$`, 'i') };
     }
-
-    console.log('🔍 Searching for porters with query:', JSON.stringify(query));
 
     const porters = await Porter.find(query)
       .select('-password')
       .sort({ rating: -1, totalTrips: -1 });
 
-    console.log(`✅ Found ${porters.length} online porters at ${station || 'all stations'}`);
-    if (porters.length > 0) {
-      console.log('   Porter names:', porters.map(p => p.name).join(', '));
-    }
+    console.log(`✅ Found ${porters.length} online porters`);
 
     res.json({
       success: true,
       count: porters.length,
       data: porters.map(porter => ({
-        id: porter.badgeNumber, // Use badgeNumber as main ID
-        _id: porter._id.toString(), // MongoDB ID
-        mongoId: porter._id.toString(), // Explicit MongoDB ID
+        id: porter.badgeNumber,
+        _id: porter._id.toString(),
+        mongoId: porter._id.toString(),
         name: porter.name,
         photo: `${req.protocol}://${req.get('host')}/uploads/${porter.image}`,
         station: porter.station,
@@ -615,7 +722,7 @@ app.get('/api/porters/available', async (req, res) => {
   }
 });
 
-// Update porter online status
+// Update porter status
 app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -655,25 +762,18 @@ app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// Get notifications for porter - UPDATED to use MongoDB _id
+// Get notifications
 app.get('/api/notifications/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.query;
 
-    console.log(`📬 Fetching notifications for ${type}: ${id}`);
-
     if (type === 'porter') {
-      // Try to find porter by either MongoDB _id or badgeNumber
       const porter = await Porter.findOne({
-        $or: [
-          { _id: id },
-          { badgeNumber: id }
-        ]
+        $or: [{ _id: id }, { badgeNumber: id }]
       });
 
       if (!porter) {
-        console.log('⚠️ Porter not found for notifications');
         return res.json({
           success: true,
           count: 0,
@@ -681,13 +781,10 @@ app.get('/api/notifications/:id', async (req, res) => {
         });
       }
 
-      // Get pending bookings using MongoDB _id
       const notifications = await Booking.find({
         porterId: porter._id.toString(),
         status: 'pending'
       }).sort({ createdAt: -1 }).limit(50);
-
-      console.log(`✅ Found ${notifications.length} notifications for ${porter.name}`);
 
       res.json({
         success: true,
@@ -714,14 +811,11 @@ app.get('/api/notifications/:id', async (req, res) => {
   }
 });
 
-// Create Booking - UPDATED to validate porter and use MongoDB _id
+// Create Booking
 app.post('/api/bookings', async (req, res) => {
   try {
     const bookingData = req.body;
     
-    console.log('📝 Creating booking with data:', bookingData);
-
-    // Validate porter exists and is online
     const porter = await Porter.findOne({ 
       $or: [
         { badgeNumber: bookingData.porterId },
@@ -730,7 +824,6 @@ app.post('/api/bookings', async (req, res) => {
     });
 
     if (!porter) {
-      console.log('❌ Porter not found:', bookingData.porterId);
       return res.status(404).json({
         success: false,
         message: 'Porter not found'
@@ -738,21 +831,30 @@ app.post('/api/bookings', async (req, res) => {
     }
 
     if (!porter.isOnline) {
-      console.log('❌ Porter is offline:', porter.name);
       return res.status(400).json({
         success: false,
         message: 'Porter is currently offline'
       });
     }
 
-    // Store MongoDB _id in porterId field for consistency
     bookingData.porterId = porter._id.toString();
     bookingData.porterBadgeNumber = porter.badgeNumber;
     
     const booking = new Booking(bookingData);
     await booking.save();
 
-    console.log(`✅ Booking created: ${booking._id} for porter ${porter.name}`);
+    // Track booking analytics
+    if (req.visitorInfo) {
+      const analyticsEntry = new Analytics({
+        ...req.visitorInfo,
+        action: 'booking',
+        page: '/booking',
+        timestamp: new Date()
+      });
+      await analyticsEntry.save();
+    }
+
+    console.log(`✅ Booking created: ${booking._id}`);
 
     res.status(201).json({
       success: true,
@@ -800,18 +902,14 @@ app.get('/api/bookings/:id', async (req, res) => {
   }
 });
 
-// Get porter's bookings - UPDATED to handle both _id and badgeNumber
+// Get porter's bookings
 app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) => {
   try {
     const { porterId } = req.params;
     const { status } = req.query;
 
-    // Find porter to get MongoDB _id
     const porter = await Porter.findOne({
-      $or: [
-        { _id: porterId },
-        { badgeNumber: porterId }
-      ]
+      $or: [{ _id: porterId }, { badgeNumber: porterId }]
     });
 
     if (!porter) {
@@ -843,14 +941,12 @@ app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) =>
     });
   }
 });
-// Get bookings by phone number (for guest users)
+
+// Get bookings by phone
 app.get('/api/bookings/phone/:phone', async (req, res) => {
   try {
     const { phone } = req.params;
     
-    console.log('📱 Fetching bookings for phone:', phone);
-    
-    // Validate phone number
     if (!/^[0-9]{10}$/.test(phone)) {
       return res.status(400).json({
         success: false,
@@ -858,7 +954,6 @@ app.get('/api/bookings/phone/:phone', async (req, res) => {
       });
     }
     
-    // Find all bookings with this phone number
     const bookings = await Booking.find({ phone: phone })
       .sort({ createdAt: -1 })
       .lean();
@@ -881,7 +976,7 @@ app.get('/api/bookings/phone/:phone', async (req, res) => {
   }
 });
 
-// Accept/Decline Booking - UPDATED to handle MongoDB _id
+// Update booking status
 app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -909,7 +1004,6 @@ app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
 
     console.log(`📋 Booking ${id} status updated to ${status}`);
 
-    // Update porter's total trips if completed
     if (status === 'completed') {
       const porter = await Porter.findById(booking.porterId);
       if (porter) {
@@ -935,7 +1029,7 @@ app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// Submit Review - UPDATED to handle MongoDB _id
+// Submit Review
 app.post('/api/reviews', async (req, res) => {
   try {
     const reviewData = req.body;
@@ -943,9 +1037,8 @@ app.post('/api/reviews', async (req, res) => {
     const review = new Review(reviewData);
     await review.save();
 
-    console.log(`⭐ Review submitted: ${reviewData.rating} stars for porter ${reviewData.porterName}`);
+    console.log(`⭐ Review submitted: ${reviewData.rating} stars`);
 
-    // Update porter's rating
     if (reviewData.porterId && reviewData.porterRating) {
       const porter = await Porter.findOne({
         $or: [
@@ -955,7 +1048,6 @@ app.post('/api/reviews', async (req, res) => {
       });
       
       if (porter) {
-        // Calculate new average rating
         const reviews = await Review.find({ 
           porterId: { $in: [porter.badgeNumber, porter._id.toString()] }
         });
@@ -982,101 +1074,6 @@ app.post('/api/reviews', async (req, res) => {
   }
 });
 
-// Analytics endpoint for admin dashboard
-app.get('/api/analytics/dashboard', async (req, res) => {
-  try {
-    console.log('📊 Fetching analytics data...');
-    
-    // Get basic statistics
-    const totalPorters = await Porter.countDocuments();
-    const onlinePorters = await Porter.countDocuments({ isOnline: true });
-    const totalBookings = await Booking.countDocuments();
-    const completedBookings = await Booking.countDocuments({ status: 'completed' });
-    
-    // Get recent bookings
-    const recentBookings = await Booking.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select('_id passengerName phone station trainNo status totalPrice createdAt')
-      .lean();
-    
-    // Get bookings by status
-    const bookingsByStatus = await Booking.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-    
-    const statusCounts = {};
-    bookingsByStatus.forEach(item => {
-      statusCounts[item._id] = item.count;
-    });
-    
-    // Get top rated porters (mock data for now)
-    const topPorters = await Porter.find({ isVerified: true })
-      .sort({ rating: -1 })
-      .limit(5)
-      .select('name rating totalTrips')
-      .lean();
-    
-    // Mock analytics data
-    const analytics = {
-      overview: {
-        totalVisits: 1250,
-        uniqueVisitors: 890,
-        totalBookings: totalBookings,
-        conversionRate: '12.5%',
-        totalRevenue: 45000
-      },
-      bookingsByStatus: {
-        completed: statusCounts.completed || 0,
-        accepted: statusCounts.accepted || 0,
-        pending: statusCounts.pending || 0,
-        declined: statusCounts.declined || 0
-      },
-      deviceStats: {
-        mobile: 850,
-        desktop: 300,
-        tablet: 100
-      },
-      topPorters: topPorters.map(porter => ({
-        _id: porter._id,
-        porterName: porter.name,
-        avgRating: porter.rating,
-        totalReviews: porter.totalTrips
-      })),
-      recentBookings: recentBookings.map(booking => ({
-        id: booking._id.toString().substring(0, 8),
-        passengerName: booking.passengerName,
-        phone: booking.phone,
-        station: booking.station,
-        trainNo: booking.trainNo,
-        status: booking.status,
-        totalPrice: booking.totalPrice,
-        requestedAt: booking.createdAt
-      }))
-    };
-    
-    console.log('✅ Analytics data fetched successfully');
-    
-    res.json({
-      success: true,
-      data: analytics
-    });
-    
-  } catch (error) {
-    console.error('❌ Analytics Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching analytics data',
-      error: error.message
-    });
-  }
-});
-
 // Admin endpoint to delete porter
 app.delete('/api/admin/porter/:id', async (req, res) => {
   try {
@@ -1084,7 +1081,6 @@ app.delete('/api/admin/porter/:id', async (req, res) => {
     
     console.log(`🗑️ Admin attempting to delete porter: ${id}`);
     
-    // Find the porter first
     const porter = await Porter.findById(id);
     if (!porter) {
       return res.status(404).json({
@@ -1093,10 +1089,9 @@ app.delete('/api/admin/porter/:id', async (req, res) => {
       });
     }
     
-    // Delete the porter
     await Porter.findByIdAndDelete(id);
     
-    console.log(`✅ Porter ${porter.name} (${porter.badgeNumber}) deleted successfully`);
+    console.log(`✅ Porter ${porter.name} deleted successfully`);
     
     res.json({
       success: true,
@@ -1132,4 +1127,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Debug endpoint: http://localhost:${PORT}/api/porters/debug`);
+  console.log(`📈 Analytics tracking enabled`);
 });
