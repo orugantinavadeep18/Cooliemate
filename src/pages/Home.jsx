@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -176,9 +175,56 @@ const Home = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 pb-0 overflow-x-hidden">
       <Navbar />
       
-      {/* Hero Section - Clean White Background */}
-      <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16 bg-white">
+ {/* Premium Hero Section - RED THEME */}
+      <section className="relative overflow-hidden min-h-screen flex items-center -mt-16 pt-16">
+        <ThreeBackground />
         
+        {/* Background image with dark overlay */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center hidden md:block"
+            style={{
+              backgroundImage: `url('/img1.jpg')`,
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 md:hidden" />
+        </div>
+
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)`
+        }} />
+
+        {/* Animated gradient orbs - RED THEME */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute top-20 left-10 w-72 h-72 bg-red-500/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              x: [0, 50, 0],
+              y: [0, 30, 0]
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-20 right-10 w-96 h-96 bg-red-600/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.3, 1],
+              x: [0, -50, 0],
+              y: [0, -30, 0]
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-80 h-80 bg-red-500/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.25, 1],
+              rotate: [0, 180, 360]
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="max-w-6xl mx-auto text-center"
@@ -186,52 +232,53 @@ const Home = () => {
             animate="visible"
             variants={staggerContainer}
           >
-            {/* Premium Badge */}
+            {/* Premium Badge - RED THEME */}
             <motion.div variants={fadeUp}>
               <motion.div
-                className="inline-flex items-center gap-2.5 mb-8 px-6 py-3 bg-red-50 rounded-full border border-red-200 shadow-lg"
-                whileHover={{ scale: 1.05 }}
+                className="inline-flex items-center gap-2.5 mb-8 px-6 py-3 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl"
+                whileHover={{ scale: 1.05, borderColor: 'rgba(239, 68, 68, 0.5)' }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 >
-                  <Sparkles className="w-5 h-5 text-red-500" />
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </motion.div>
-                <p className="text-red-600 text-sm font-bold tracking-[0.2em] uppercase">
+                <p className="text-red-200 text-sm font-bold tracking-[0.2em] uppercase">
                   Premium Porter Services
                 </p>
                 <motion.div
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
                 >
-                  <Sparkles className="w-5 h-5 text-red-500" />
+                  <Sparkles className="w-5 h-5 text-red-400" />
                 </motion.div>
               </motion.div>
             </motion.div>
 
-            {/* Main Heading */}
+            {/* Main Heading - RED THEME */}
             <motion.div variants={fadeUp}>
               <h1 className="text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tight px-4">
-                <span className="text-gray-900 block mb-2">Welcome to</span>
-                <span className="bg-gradient-to-r from-red-500 via-red-600 to-red-700 bg-clip-text text-transparent inline-block">
+                <span className="text-white block mb-2">Welcome to</span>
+                <span className="bg-gradient-to-r from-red-100 via-red-300 to-red-600 bg-clip-text text-transparent inline-block">
                   CoolieMate
+                  {/* </span> */}
                 </span>
               </h1>
             </motion.div>
 
-            {/* Subtitle with elegant divider */}
+            {/* Subtitle with elegant divider - RED THEME */}
             <motion.div variants={fadeUp} className="flex items-center justify-center gap-4 mb-6">
               <motion.div 
-                className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-red-400"
+                className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-red-400/50"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
               />
-              <Star className="w-5 h-5 text-red-500 fill-red-500" />
+              <Star className="w-5 h-5 text-red-400 fill-red-400" />
               <motion.div 
-                className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-red-400"
+                className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-red-400/50"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
@@ -242,19 +289,19 @@ const Home = () => {
               variants={fadeUp}
               className="text-2xl sm:text-3xl lg:text-4xl mb-5 font-semibold px-4"
             >
-              <span className="text-red-600">Your Personal Porter</span>
-              <span className="text-gray-700"> Booking Platform</span>
+              <span className="text-red-300">Your Personal Porter</span>
+              <span className="text-gray-300"> Booking Platform</span>
             </motion.p>
 
-            {/* Description */}
+            {/* Description - RED THEME */}
             <motion.p 
               variants={fadeUp}
-              className="text-base sm:text-lg lg:text-xl mb-12 text-gray-600 max-w-3xl mx-auto px-4 leading-relaxed"
+              className="text-base sm:text-lg lg:text-xl mb-12 text-gray-300 max-w-3xl mx-auto px-4 leading-relaxed"
             >
-              Experience <span className="text-red-600 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
+              Experience <span className="text-red-400 font-semibold">premium luggage assistance</span> at your fingertips — making your journey lighter, smoother, and more elegant
             </motion.p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons - RED THEME */}
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-5 justify-center items-center px-4 mb-16">
               <Link to="/book" className="w-full sm:w-auto">
                 <motion.div 
@@ -265,7 +312,7 @@ const Home = () => {
                   <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-red-400 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-300" />
                   <Button
                     size="lg"
-                    className="relative font-bold text-lg px-10 py-7 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
+                    className="relative font-bold text-lg px-10 py-7 bg-gradient-to-r from-red-500 to-red-400 hover:from-red-600 hover:to-red-800 text-white shadow-2xl rounded-xl w-full sm:w-auto transition-all duration-300"
                   >
                     Book a Porter Now
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -282,14 +329,14 @@ const Home = () => {
                   size="lg"
                   variant="outline"
                   onClick={() => setShowNotification(true)}
-                  className="font-semibold text-lg px-10 py-7 bg-white border-2 border-red-500 text-red-600 hover:bg-red-50 rounded-xl w-full sm:w-auto transition-all duration-300"
+                  className="font-semibold text-lg px-10 py-7 bg-white/5 backdrop-blur-md border-2 border-red-400/50 text-red-300 hover:bg-white/10 hover:border-red-400 rounded-xl w-full sm:w-auto transition-all duration-300"
                 >
                   Download Our App
                 </Button>
               </motion.div>
             </motion.div>
 
-            {/* Toast notification */}
+            {/* Toast notification - RED THEME */}
             {showNotification && (
               <motion.div 
                 initial={{ opacity: 0, y: 50 }}
@@ -306,6 +353,9 @@ const Home = () => {
                 </button>
               </motion.div>
             )}
+
+            {/* Scroll Indicator - RED THEME */}
+            
           </motion.div>
         </div>
       </section>
