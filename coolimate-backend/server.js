@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -15,6 +16,169 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
   console.log('✅ Created uploads directory');
+}
+
+// ==================== EMAIL CONFIGURATION ====================
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.ADMIN_EMAIL,
+    pass: process.env.ADMIN_EMAIL_PASSWORD
+  }
+});
+
+// Verify email configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email Configuration Error:', error);
+  } else {
+    console.log('✅ Email Service Ready');
+  }
+});
+
+// Function to send email to admin
+async function sendBookingNotificationEmail(bookingData, porter) {
+  try {
+    const mailOptions = {
+      from: process.env.ADMIN_EMAIL,
+      to: process.env.ADMIN_EMAIL,
+      subject: `🚀 New Booking Request - ${bookingData.passengerName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0;">
+            <h2 style="margin: 0;">New Booking Request</h2>
+            <p style="margin: 5px 0 0 0; font-size: 12px;">Booking ID: ${bookingData.bookingId}</p>
+          </div>
+          
+          <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+            
+            <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Passenger Details</h3>
+            <table style="width: 100%; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Name:</td>
+                <td style="padding: 8px;">${bookingData.passengerName}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Phone:</td>
+                <td style="padding: 8px;">${bookingData.phone}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">PNR:</td>
+                <td style="padding: 8px;">${bookingData.pnr}</td>
+              </tr>
+            </table>
+
+            <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Travel Details</h3>
+            <table style="width: 100%; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Station:</td>
+                <td style="padding: 8px;">${bookingData.station}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Train No:</td>
+                <td style="padding: 8px;">${bookingData.trainNo}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Train Name:</td>
+                <td style="padding: 8px;">${bookingData.trainName}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Coach No:</td>
+                <td style="padding: 8px;">${bookingData.coachNo}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Date of Journey:</td>
+                <td style="padding: 8px;">${bookingData.dateOfJourney}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Arrival Time:</td>
+                <td style="padding: 8px;">${bookingData.arrivalTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">From → To:</td>
+                <td style="padding: 8px;">${bookingData.boardingStation} (${bookingData.boardingStationCode}) → ${bookingData.destinationStation} (${bookingData.destinationStationCode})</td>
+              </tr>
+            </table>
+
+            <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Luggage Details</h3>
+            <table style="width: 100%; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Number of Bags:</td>
+                <td style="padding: 8px;">${bookingData.numberOfBags}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Weight:</td>
+                <td style="padding: 8px;">${bookingData.weight} kg</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Late Night:</td>
+                <td style="padding: 8px;">${bookingData.isLateNight ? 'Yes' : 'No'}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Priority:</td>
+                <td style="padding: 8px;">${bookingData.isPriority ? 'Yes' : 'No'}</td>
+              </tr>
+            </table>
+
+            <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Assigned Porter</h3>
+            <table style="width: 100%; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Porter Name:</td>
+                <td style="padding: 8px;">${porter.name}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Badge Number:</td>
+                <td style="padding: 8px;">${porter.badgeNumber}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Phone:</td>
+                <td style="padding: 8px;">${porter.phone}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Rating:</td>
+                <td style="padding: 8px;">⭐ ${porter.rating}/5 (${porter.totalTrips} trips)</td>
+              </tr>
+            </table>
+
+            <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Pricing</h3>
+            <table style="width: 100%; margin-bottom: 20px;">
+              <tr>
+                <td style="padding: 8px; color: #666; font-weight: bold;">Total Price:</td>
+                <td style="padding: 8px; font-size: 18px; color: #27ae60; font-weight: bold;">₹${bookingData.totalPrice}</td>
+              </tr>
+              <tr style="background: #f0f0f0;">
+                <td style="padding: 8px; color: #666; font-weight: bold;">Status:</td>
+                <td style="padding: 8px; color: #667eea; font-weight: bold;">PENDING</td>
+              </tr>
+            </table>
+
+            ${bookingData.notes ? `
+            <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Special Notes</h3>
+            <p style="padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; margin: 0;">
+              ${bookingData.notes}
+            </p>
+            ` : ''}
+
+            <div style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-left: 4px solid #3498db; border-radius: 5px;">
+              <p style="margin: 0; color: #2c3e50; font-size: 12px;">
+                ⏰ Booking Time: ${new Date().toLocaleString()}<br>
+                📊 Status: Awaiting Porter Response<br>
+                🔔 Action: Monitor porter acceptance/rejection
+              </p>
+            </div>
+
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Admin notification email sent for booking ${bookingData.bookingId}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending email:', error);
+    return false;
+  }
 }
 
 // Middleware - UPDATED CORS CONFIGURATION
@@ -112,7 +276,7 @@ const reviewSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// **NEW: Analytics Schema for tracking visits**
+// Analytics Schema for tracking visits
 const analyticsSchema = new mongoose.Schema({
   visitorId: { type: String, required: true },
   ipAddress: String,
@@ -148,7 +312,6 @@ const Analytics = mongoose.model('Analytics', analyticsSchema);
 
 // ==================== HELPER FUNCTIONS ====================
 
-// Detect device type from user agent
 function detectDevice(userAgent) {
   if (!userAgent) return 'desktop';
   const ua = userAgent.toLowerCase();
@@ -161,7 +324,6 @@ function detectDevice(userAgent) {
   return 'desktop';
 }
 
-// Generate visitor ID from IP and user agent
 function generateVisitorId(ip, userAgent) {
   const crypto = require('crypto');
   return crypto.createHash('md5').update(ip + userAgent).digest('hex');
@@ -169,9 +331,7 @@ function generateVisitorId(ip, userAgent) {
 
 // ==================== MIDDLEWARE ====================
 
-// **NEW: Visitor tracking middleware**
 app.use(async (req, res, next) => {
-  // Only track page visits, not API calls to other endpoints
   if (req.path.startsWith('/api/') && !req.path.startsWith('/api/analytics/track')) {
     return next();
   }
@@ -182,7 +342,6 @@ app.use(async (req, res, next) => {
     const visitorId = generateVisitorId(ipAddress, userAgent);
     const device = detectDevice(userAgent);
 
-    // Store visitor info in request for later use
     req.visitorInfo = {
       visitorId,
       ipAddress,
@@ -196,7 +355,6 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// Configure Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => {
@@ -220,7 +378,6 @@ const upload = multer({
   }
 });
 
-// Middleware to authenticate token
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -246,12 +403,10 @@ function authenticateToken(req, res, next) {
 
 // ==================== ROUTES ====================
 
-// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
-// **NEW: Track visitor analytics**
 app.post('/api/analytics/track', async (req, res) => {
   try {
     const { page, action, referrer, sessionId } = req.body;
@@ -282,33 +437,23 @@ app.post('/api/analytics/track', async (req, res) => {
   }
 });
 
-// **UPDATED: Analytics endpoint with real data**
 app.get('/api/analytics/dashboard', async (req, res) => {
   try {
     console.log('📊 Fetching real analytics data...');
     
-    // Get total visits
     const totalVisits = await Analytics.countDocuments({ action: 'visit' });
-    
-    // Get unique visitors (count distinct visitorIds)
     const uniqueVisitors = await Analytics.distinct('visitorId');
-    
-    // Get total bookings
     const totalBookings = await Booking.countDocuments();
-    
-    // Calculate conversion rate
     const conversionRate = uniqueVisitors.length > 0 
       ? ((totalBookings / uniqueVisitors.length) * 100).toFixed(1) + '%'
       : '0%';
     
-    // Get total revenue from completed bookings
     const revenueData = await Booking.aggregate([
       { $match: { status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$totalPrice' } } }
     ]);
     const totalRevenue = revenueData.length > 0 ? revenueData[0].total : 0;
     
-    // Get bookings by status
     const bookingsByStatus = await Booking.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
@@ -323,7 +468,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       statusCounts[item._id] = item.count;
     });
     
-    // Get device statistics
     const deviceStats = await Analytics.aggregate([
       { $group: { _id: '$device', count: { $sum: 1 } } }
     ]);
@@ -333,7 +477,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       deviceCounts[item._id] = item.count;
     });
     
-    // Get top rated porters with actual reviews
     const topPorters = await Review.aggregate([
       {
         $group: {
@@ -347,7 +490,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
       { $limit: 5 }
     ]);
     
-    // Get recent bookings
     const recentBookings = await Booking.find()
       .sort({ createdAt: -1 })
       .limit(10)
@@ -383,11 +525,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
     };
     
     console.log('✅ Real analytics data fetched successfully');
-    console.log(`   Total Visits: ${totalVisits}`);
-    console.log(`   Unique Visitors: ${uniqueVisitors.length}`);
-    console.log(`   Total Bookings: ${totalBookings}`);
-    console.log(`   Conversion Rate: ${conversionRate}`);
-    
     res.json({
       success: true,
       data: analytics
@@ -403,7 +540,6 @@ app.get('/api/analytics/dashboard', async (req, res) => {
   }
 });
 
-// Debug endpoint to check specific porter
 app.get('/api/porter/debug/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
@@ -436,7 +572,6 @@ app.get('/api/porter/debug/:identifier', async (req, res) => {
   }
 });
 
-// Debug endpoint to check porter online status
 app.get('/api/porters/debug', async (req, res) => {
   try {
     const allPorters = await Porter.find({})
@@ -466,7 +601,6 @@ app.get('/api/porters/debug', async (req, res) => {
   }
 });
 
-// Register Porter
 app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   try {
     const { name, phone, badgeNumber, station, password } = req.body;
@@ -553,7 +687,6 @@ app.post('/api/porter/register', upload.single('image'), async (req, res) => {
   }
 });
 
-// Login Porter
 app.post('/api/porter/login', async (req, res) => {
   try {
     const { phone, badgeNumber, password } = req.body;
@@ -644,7 +777,6 @@ app.post('/api/porter/login', async (req, res) => {
   }
 });
 
-// Get Porter Profile
 app.get('/api/porter/profile', authenticateToken, async (req, res) => {
   try {
     const porter = await Porter.findById(req.porter.id).select('-password');
@@ -671,14 +803,13 @@ app.get('/api/porter/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Get available porters
 app.get('/api/porters/available', async (req, res) => {
   try {
     const { station } = req.query;
-    
+
     let query = { isOnline: true, isVerified: true };
     if (station) {
-      query.station = { $regex: new RegExp(`^${station}$`, 'i') };
+      query.station = { $regex: new RegExp(`^${station}`, 'i') };
     }
 
     const porters = await Porter.find(query)
@@ -722,7 +853,6 @@ app.get('/api/porters/available', async (req, res) => {
   }
 });
 
-// Update porter status
 app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -762,7 +892,6 @@ app.patch('/api/porter/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// Get notifications
 app.get('/api/notifications/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -811,7 +940,6 @@ app.get('/api/notifications/:id', async (req, res) => {
   }
 });
 
-// Create Booking
 app.post('/api/bookings', async (req, res) => {
   try {
     const bookingData = req.body;
@@ -842,6 +970,13 @@ app.post('/api/bookings', async (req, res) => {
     
     const booking = new Booking(bookingData);
     await booking.save();
+
+    // Send email notification to admin
+    const emailData = {
+      bookingId: booking._id.toString(),
+      ...bookingData
+    };
+    await sendBookingNotificationEmail(emailData, porter);
 
     // Track booking analytics
     if (req.visitorInfo) {
@@ -875,7 +1010,6 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
-// Get booking by ID
 app.get('/api/bookings/:id', async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
@@ -902,7 +1036,6 @@ app.get('/api/bookings/:id', async (req, res) => {
   }
 });
 
-// Get porter's bookings
 app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) => {
   try {
     const { porterId } = req.params;
@@ -942,7 +1075,6 @@ app.get('/api/porter/:porterId/bookings', authenticateToken, async (req, res) =>
   }
 });
 
-// Get bookings by phone
 app.get('/api/bookings/phone/:phone', async (req, res) => {
   try {
     const { phone } = req.params;
@@ -976,7 +1108,6 @@ app.get('/api/bookings/phone/:phone', async (req, res) => {
   }
 });
 
-// Update booking status
 app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1029,7 +1160,6 @@ app.patch('/api/bookings/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// Submit Review
 app.post('/api/reviews', async (req, res) => {
   try {
     const reviewData = req.body;
@@ -1074,7 +1204,6 @@ app.post('/api/reviews', async (req, res) => {
   }
 });
 
-// Admin endpoint to delete porter
 app.delete('/api/admin/porter/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1113,7 +1242,6 @@ app.delete('/api/admin/porter/:id', async (req, res) => {
   }
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
@@ -1122,10 +1250,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Debug endpoint: http://localhost:${PORT}/api/porters/debug`);
   console.log(`📈 Analytics tracking enabled`);
+  console.log(`📧 Email service enabled`);
 });
