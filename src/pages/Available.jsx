@@ -14,14 +14,14 @@ import {
   Package,
   IndianRupee,
   ArrowLeft,
-  TrendingUp,
+  Zap,
   XCircle,
   X,
   AlertCircle,
   Award,
-  Zap
+  Send,
+  Sparkles
 } from "lucide-react";
-import Navbar from "../components/Navbar";
 
 const API_BASE = 'https://cooliemate.onrender.com';
 
@@ -42,6 +42,9 @@ const AvailablePorters = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ title: "", description: "", variant: "default" });
+  const [autoRequestEnabled, setAutoRequestEnabled] = useState(true);
+  const [autoRequestCountdown, setAutoRequestCountdown] = useState(null);
+  const [hasAutoRequested, setHasAutoRequested] = useState(false);
 
   const toast = ({ title, description, variant = "default" }) => {
     setToastMessage({ title, description, variant });
@@ -98,6 +101,11 @@ const AvailablePorters = () => {
               title: "No Porters Available",
               description: "No porters are currently online",
             });
+          } else if (data.data.length === 1 && autoRequestEnabled && !hasAutoRequested) {
+            // Auto-request if only one porter available
+            setTimeout(() => {
+              handleAutoRequest(data.data[0]);
+            }, 1500);
           }
         } else {
           setPorters([]);
@@ -182,6 +190,32 @@ const AvailablePorters = () => {
     };
   }, [requestSent, currentBookingId, selectedPorter]);
 
+  // Countdown timer for auto-request
+  useEffect(() => {
+    if (autoRequestCountdown === null) return;
+
+    if (autoRequestCountdown <= 0) {
+      setAutoRequestCountdown(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setAutoRequestCountdown(autoRequestCountdown - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [autoRequestCountdown]);
+
+  const handleAutoRequest = async (porter) => {
+    if (!bookingData || hasAutoRequested) return;
+
+    console.log('🤖 Auto-requesting from porter:', porter.name);
+    setHasAutoRequested(true);
+    setAutoRequestEnabled(false);
+    
+    await handleSendRequest(porter);
+  };
+
   const handleSendRequest = async (porter) => {
     if (!bookingData) {
       toast({
@@ -254,6 +288,7 @@ const AvailablePorters = () => {
       });
       setRequestSent(false);
       setWaitingForResponse(false);
+      setHasAutoRequested(false);
     }
   };
 
@@ -343,8 +378,6 @@ const AvailablePorters = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Toast Notification */}
-      <Navbar/>
       {showToast && (
         <div className="fixed top-4 left-4 right-4 z-50 animate-in fade-in slide-in-from-top-2">
           <div className={`border rounded-xl shadow-xl p-4 max-w-md mx-auto backdrop-blur-sm ${
@@ -358,7 +391,6 @@ const AvailablePorters = () => {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40 shadow-sm">
         <div className="px-4 py-4 max-w-6xl mx-auto">
           <Button variant="ghost" size="sm" className="mb-3 text-gray-700 hover:bg-gray-100" onClick={handleBackToBooking}>
@@ -425,6 +457,19 @@ const AvailablePorters = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Auto Request Banner */}
+        {autoRequestEnabled && !hasAutoRequested && porters.length === 1 && (
+          <Card className="mb-6 shadow-md border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 overflow-hidden">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-amber-600 flex-shrink-0 animate-pulse" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-900">Smart Auto-Request Enabled</p>
+                <p className="text-xs text-amber-700 mt-0.5">Automatically sending request to the best available porter...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Porter Cards */}
         {loadingPorters ? (
@@ -597,10 +642,11 @@ const AvailablePorters = () => {
                   ) : (
                     <Button
                       onClick={() => handleSendRequest(porter)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center justify-center gap-2"
                       size="sm"
                       disabled={requestSent}
                     >
+                      <Send className="w-4 h-4" />
                       Send Request
                     </Button>
                   )}
