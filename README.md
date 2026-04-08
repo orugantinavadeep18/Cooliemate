@@ -1,1 +1,1 @@
-Link:-www.cooliemqte.in
+Link:-www.cooliemate.in
